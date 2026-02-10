@@ -72,12 +72,12 @@ export default function Hero() {
                 transition={{ delay: 0.8 }}
               >
                 <p className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-300">
-                  AI/ML Engineer & Python Developer
+                  Software Developer & Python Expert
                 </p>
                 <p className="text-lg sm:text-xl text-gray-400 max-w-2xl">
                   Building{' '}
-                  <span className="text-primary-400 font-semibold">production-grade AI systems</span> with{' '}
-                  <span className="text-accent-cyan font-semibold">Python & Deep Learning</span>. Published researcher with{' '}
+                  <span className="text-primary-400 font-semibold">intelligent automation tools</span> with{' '}
+                  <span className="text-accent-cyan font-semibold">Python, Azure OpenAI & GPT-4</span>. Published researcher with{' '}
                   <span className="text-accent-purple font-semibold">2 IEEE papers</span>.
                   <br />
                   <span className="text-sm text-gray-500 italic">

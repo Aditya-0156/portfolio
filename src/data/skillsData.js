@@ -50,33 +50,33 @@ export const skills = {
 
 export const highlights = [
   {
-    title: "AI/ML Engineer",
-    description: "2 IEEE publications, Best Paper Award winner, 95% R² accuracy models",
-    icon: "🏆"
-  },
-  {
-    title: "Python Expert",
-    description: "Building production-grade automation, ML pipelines, and AI systems",
-    icon: "🐍"
-  },
-  {
-    title: "Research Scholar",
-    description: "Published researcher in optical networks & deep learning",
-    icon: "📄"
-  },
-  {
     title: "Software Developer @ HCLTech",
-    description: "Reducing dev effort by 80% with Azure OpenAI automation",
+    description: "Reducing dev effort by 80% with Azure OpenAI automation tools",
     icon: "💼"
   },
   {
-    title: "Full-Stack AI Developer",
-    description: "From deep learning models to production APIs and web interfaces",
-    icon: "🚀"
+    title: "Python Expert",
+    description: "Building automation utilities, ML models, and intelligent systems",
+    icon: "🐍"
+  },
+  {
+    title: "Published Researcher",
+    description: "2 IEEE publications, 🏆 Best Paper Award winner (IEEE ANTS 2025)",
+    icon: "📄"
+  },
+  {
+    title: "IIIT-Delhi Graduate",
+    description: "B.Tech in Computer Science (2025) with research experience",
+    icon: "🎓"
+  },
+  {
+    title: "Automation Specialist",
+    description: "GPT-4, Azure OpenAI, CI/CD pipelines, and intelligent tools",
+    icon: "🤖"
   },
   {
     title: "Quirky Coder",
-    description: "Can build anything - Python, Java, or AI-powered frontend! 😉",
+    description: "Can build anything - Python, Java, C#, or AI-powered frontend! 😉",
     icon: "😎"
   },
 ];
