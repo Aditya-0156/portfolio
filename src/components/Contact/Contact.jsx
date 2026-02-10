@@ -20,7 +20,7 @@ const contactInfo = [
 
 const socialLinks = [
   { icon: Github, label: 'GitHub', href: 'https://github.com/Aditya-0156', color: 'hover:text-white' },
-  { icon: Linkedin, label: 'LinkedIn', href: '#', color: 'hover:text-[#0A66C2]' },
+  { icon: Linkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/in/aditya-yadav-29340b273/', color: 'hover:text-[#0A66C2]' },
   { icon: Twitter, label: 'Twitter', href: '#', color: 'hover:text-[#1DA1F2]' },
 ];
 

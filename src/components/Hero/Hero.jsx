@@ -143,7 +143,7 @@ export default function Hero() {
                 <Github className="w-6 h-6" />
               </motion.a>
               <motion.a
-                href="#"
+                href="https://www.linkedin.com/in/aditya-yadav-29340b273/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 rounded-lg glass glass-hover border border-white/10"

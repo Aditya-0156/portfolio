@@ -12,7 +12,7 @@ const navLinks = [
 
 const socialLinks = [
   { name: 'GitHub', icon: Github, href: 'https://github.com/Aditya-0156', color: '#fff' },
-  { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/in/aditya-yadav-iiitd', color: '#0A66C2' },
+  { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/in/aditya-yadav-29340b273/', color: '#0A66C2' },
   { name: 'Email', icon: Mail, href: 'mailto:aditya21374@iiitd.ac.in', color: '#EA4335' },
 ];
 
