@@ -6,14 +6,14 @@ const contactInfo = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'your.email@example.com',
-    href: 'mailto:your.email@example.com',
+    value: 'aditya21374@iiitd.ac.in',
+    href: 'mailto:aditya21374@iiitd.ac.in',
     color: 'text-primary-400'
   },
   {
     icon: MapPin,
     label: 'Location',
-    value: 'Your City, Country',
+    value: 'New Delhi, India',
     color: 'text-accent-cyan'
   },
 ];

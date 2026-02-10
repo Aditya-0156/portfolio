@@ -53,7 +53,7 @@ export default function Hero() {
               className="inline-block"
             >
               <span className="hero-text inline-block px-4 py-2 rounded-full glass text-sm font-medium text-primary-400 border border-primary-500/30">
-                👋 Welcome to my portfolio
+                🏆 IEEE Best Paper Award Winner | Software Developer @ HCLTech
               </span>
             </motion.div>
 
@@ -72,13 +72,17 @@ export default function Hero() {
                 transition={{ delay: 0.8 }}
               >
                 <p className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-300">
-                  Software Developer
+                  AI/ML Engineer & Python Developer
                 </p>
                 <p className="text-lg sm:text-xl text-gray-400 max-w-2xl">
-                  Crafting innovative solutions with{' '}
-                  <span className="text-primary-400 font-semibold">AI</span>,{' '}
-                  <span className="text-accent-cyan font-semibold">modern web technologies</span>, and{' '}
-                  <span className="text-accent-purple font-semibold">beautiful design</span>
+                  Building{' '}
+                  <span className="text-primary-400 font-semibold">production-grade AI systems</span> with{' '}
+                  <span className="text-accent-cyan font-semibold">Python & Deep Learning</span>. Published researcher with{' '}
+                  <span className="text-accent-purple font-semibold">2 IEEE papers</span>.
+                  <br />
+                  <span className="text-sm text-gray-500 italic">
+                    (This beautiful portfolio? Made with AI's help because I'm honest like that 😉)
+                  </span>
                 </p>
               </motion.div>
             </div>
@@ -110,8 +114,8 @@ export default function Hero() {
               </motion.a>
 
               <motion.a
-                href="/resume.pdf"
-                download
+                href="/Aditya_Yadav_Resume.pdf"
+                download="Aditya_Yadav_Resume.pdf"
                 className="px-6 py-3 rounded-full glass glass-hover font-semibold border border-white/10 flex items-center gap-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -177,21 +181,29 @@ export default function Hero() {
                     <div className="pl-6 space-y-2">
                       <div>
                         <span className="text-accent-cyan">name:</span>
-                        <span className="text-green-400"> "Aditya"</span>,
+                        <span className="text-green-400"> "Aditya Yadav"</span>,
                       </div>
                       <div>
-                        <span className="text-accent-cyan">skills:</span>
+                        <span className="text-accent-cyan">role:</span>
+                        <span className="text-green-400"> "AI/ML Engineer"</span>,
+                      </div>
+                      <div>
+                        <span className="text-accent-cyan">company:</span>
+                        <span className="text-green-400"> "HCLTech"</span>,
+                      </div>
+                      <div>
+                        <span className="text-accent-cyan">expertise:</span>
                         <span className="text-gray-400"> [</span>
-                        <span className="text-green-400">"AI"</span>,
-                        <span className="text-green-400"> "Full-Stack"</span>
+                        <span className="text-green-400">"Python"</span>,
+                        <span className="text-green-400"> "Deep Learning"</span>
                         <span className="text-gray-400">]</span>,
                       </div>
                       <div>
-                        <span className="text-accent-cyan">passion:</span>
-                        <span className="text-green-400"> "Building Cool Stuff"</span>,
+                        <span className="text-accent-cyan">achievements:</span>
+                        <span className="text-green-400"> "🏆 IEEE Best Paper"</span>,
                       </div>
                       <div>
-                        <span className="text-accent-cyan">available:</span>
+                        <span className="text-accent-cyan">hireable:</span>
                         <span className="text-primary-400"> true</span>
                       </div>
                     </div>

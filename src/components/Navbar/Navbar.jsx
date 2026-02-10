@@ -12,8 +12,8 @@ const navLinks = [
 
 const socialLinks = [
   { name: 'GitHub', icon: Github, href: 'https://github.com/Aditya-0156', color: '#fff' },
-  { name: 'LinkedIn', icon: Linkedin, href: '#', color: '#0A66C2' },
-  { name: 'Email', icon: Mail, href: 'mailto:your.email@example.com', color: '#EA4335' },
+  { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/in/aditya-yadav-iiitd', color: '#0A66C2' },
+  { name: 'Email', icon: Mail, href: 'mailto:aditya21374@iiitd.ac.in', color: '#EA4335' },
 ];
 
 export default function Navbar() {

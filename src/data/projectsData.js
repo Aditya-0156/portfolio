@@ -2,9 +2,9 @@ export const projects = [
   {
     id: 1,
     title: "RAG Knowledge Base",
-    subtitle: "AI-Powered Document Q&A System",
-    description: "An advanced RAG (Retrieval-Augmented Generation) system with semantic search capabilities. Features both CLI and web interface for intelligent document querying using vector embeddings and LLM integration.",
-    longDescription: "A professional-grade RAG implementation that combines the power of ChromaDB vector database with Google Gemini LLM for accurate, context-aware responses. The system processes documents, creates semantic embeddings, and retrieves relevant information to generate precise answers.",
+    subtitle: "AI-Powered Document Intelligence System",
+    description: "Advanced RAG implementation with semantic search capabilities, featuring both CLI and web interface for intelligent document querying using vector embeddings and LLM integration.",
+    longDescription: "A professional-grade RAG (Retrieval-Augmented Generation) system that combines ChromaDB vector database with Google Gemini LLM for accurate, context-aware responses. The system processes documents, creates semantic embeddings, and retrieves relevant information to generate precise answers. Built with modern Python stack and a sleek glassmorphism web interface.",
     technologies: [
       { name: "Python", icon: "🐍", color: "#3776AB" },
       { name: "LangChain", icon: "🦜", color: "#1C3C3C" },
@@ -14,61 +14,232 @@ export const projects = [
       { name: "React", icon: "⚛️", color: "#61DAFB" },
     ],
     features: [
-      "Semantic search with vector embeddings",
-      "Document chunking and processing",
-      "CLI interface for quick queries",
-      "Modern glassmorphism web UI",
-      "Real-time document Q&A",
-      "Context-aware responses",
+      "Semantic search with vector embeddings for accurate information retrieval",
+      "Document chunking and intelligent processing pipeline",
+      "CLI interface for quick terminal-based queries",
+      "Modern glassmorphism web UI (yes, with AI's help 😉)",
+      "Real-time document Q&A with context-aware responses",
+      "Integration with Google Gemini for state-of-the-art LLM capabilities",
     ],
     github: "https://github.com/Aditya-0156/RAG",
-    demo: null, // Add live demo URL if available
-    image: "/projects/rag-preview.png", // You can add screenshots later
+    demo: null,
+    image: "/projects/rag-preview.png",
     category: "AI/ML",
-    date: "2025-01",
+    date: "2025-02",
     featured: true,
     stats: {
-      stars: "⭐",
+      stars: "⭐ Latest",
       tech: "6+ Technologies",
-      type: "Full-Stack"
+      type: "Full-Stack AI"
     }
   },
-  // Template for future projects - uncomment and fill in when adding new projects
-  /*
   {
     id: 2,
-    title: "Your Next Project",
-    subtitle: "Brief tagline",
-    description: "Short description for card view",
-    longDescription: "Detailed description of the project",
+    title: "LLM-Powered Microelectronics Chatbot",
+    subtitle: "Domain-Specific AI Assistant with 92% Accuracy",
+    description: "Fine-tuned LLM chatbot serving 1,000+ microelectronic components with 92% query accuracy. Reduced response latency by 40% using optimized Flask REST API.",
+    longDescription: "Built a specialized AI chatbot for microelectronics domain by fine-tuning Hugging Face transformers on 50K+ domain-specific samples. Implemented efficient REST API architecture serving technical queries with high accuracy while maintaining low latency. Perfect example of practical NLP application in specialized domains.",
     technologies: [
-      { name: "Tech1", icon: "🔧", color: "#color" },
-      { name: "Tech2", icon: "⚙️", color: "#color" },
+      { name: "Python", icon: "🐍", color: "#3776AB" },
+      { name: "Hugging Face", icon: "🤗", color: "#FFD21E" },
+      { name: "Transformers", icon: "🤖", color: "#FF6F00" },
+      { name: "Flask", icon: "⚗️", color: "#000000" },
+      { name: "REST API", icon: "🔌", color: "#009688" },
+      { name: "NLP", icon: "💬", color: "#8B5CF6" },
     ],
     features: [
-      "Feature 1",
-      "Feature 2",
+      "92% query accuracy on microelectronic component queries",
+      "Fine-tuned on 50K+ domain-specific samples",
+      "40% reduction in response latency through optimization",
+      "RESTful API for seamless integration",
+      "Handles 1,000+ component specifications",
+      "Production-ready Flask backend",
     ],
-    github: "https://github.com/yourusername/project",
-    demo: "https://project-demo.com",
-    image: "/projects/project-preview.png",
-    category: "Web Development",
-    date: "2025-02",
-    featured: false,
+    github: null,
+    demo: null,
+    image: "/projects/chatbot-preview.png",
+    category: "AI/ML",
+    date: "2024",
+    featured: true,
     stats: {
-      stars: "⭐",
-      tech: "X Technologies",
-      type: "Frontend/Backend/Full-Stack"
+      stars: "🏆 92% Accuracy",
+      tech: "6 Technologies",
+      type: "Backend AI"
     }
   },
-  */
+  {
+    id: 3,
+    title: "ML-Based Quality of Transmission Estimator",
+    subtitle: "IEEE Published Research - 95% R² Accuracy",
+    description: "Developed ML model achieving 95% R² accuracy for optical network QoT estimation using Random Forest and Deep Neural Networks. Published in IEEE ANTS 2024.",
+    longDescription: "Research project developing machine learning models for Quality of Transmission estimation in optical networks. Achieved 95% R² accuracy using ensemble methods combining Random Forest with Deep Neural Networks. Work published in IEEE ANTS 2024 conference, contributing to next-generation optical network optimization.",
+    technologies: [
+      { name: "Python", icon: "🐍", color: "#3776AB" },
+      { name: "TensorFlow", icon: "🧠", color: "#FF6F00" },
+      { name: "Keras", icon: "📊", color: "#D00000" },
+      { name: "Scikit-learn", icon: "📈", color: "#F7931E" },
+      { name: "Deep Learning", icon: "🔬", color: "#8B5CF6" },
+      { name: "NumPy", icon: "🔢", color: "#013243" },
+    ],
+    features: [
+      "95% R² accuracy on transmission quality prediction",
+      "Random Forest + Deep Neural Network ensemble",
+      "Published in IEEE ANTS 2024 conference",
+      "Real-world optical network optimization",
+      "Advanced feature engineering pipeline",
+      "Production-ready ML model deployment",
+    ],
+    github: null,
+    demo: null,
+    image: "/projects/qot-preview.png",
+    category: "Research",
+    date: "2024",
+    featured: true,
+    stats: {
+      stars: "📄 IEEE Published",
+      tech: "Deep Learning",
+      type: "Research"
+    }
+  },
+  {
+    id: 4,
+    title: "Optical Network Fault Localization System",
+    subtitle: "🏆 Best Paper Award - IEEE ANTS 2025",
+    description: "Deep Learning system for soft-failure localization in C+L band optical networks. Won Best Paper Award in Demos & Exhibits category at IEEE ANTS 2025.",
+    longDescription: "Built an intelligent fault localization system for optical amplifiers handling 8 fault scenarios using C+L band spectral data analysis. Implemented advanced generalization techniques enabling fault prediction on unseen degradation values. The demonstration won the Best Paper Award at IEEE ANTS 2025 in the Demos & Exhibits category, showcasing practical application of deep learning in optical network management.",
+    technologies: [
+      { name: "Python", icon: "🐍", color: "#3776AB" },
+      { name: "Deep Learning", icon: "🔬", color: "#8B5CF6" },
+      { name: "TensorFlow", icon: "🧠", color: "#FF6F00" },
+      { name: "Signal Processing", icon: "📡", color: "#00BCD4" },
+      { name: "Pandas", icon: "🐼", color: "#150458" },
+      { name: "Matplotlib", icon: "📊", color: "#11557C" },
+    ],
+    features: [
+      "🏆 Best Paper Award at IEEE ANTS 2025",
+      "Handles 8 different fault scenarios with high accuracy",
+      "C+L band spectral data analysis",
+      "Generalization on unseen degradation values",
+      "Real-time fault prediction and localization",
+      "Published demonstration with live optical testbed",
+    ],
+    github: null,
+    demo: null,
+    image: "/projects/fault-preview.png",
+    category: "Research",
+    date: "2025",
+    featured: true,
+    stats: {
+      stars: "🏆 Best Paper",
+      tech: "Deep Learning",
+      type: "Research"
+    }
+  },
+  {
+    id: 5,
+    title: "Vector-Borne Disease Prediction System",
+    subtitle: "94% Accuracy Multi-Class ML Classifier",
+    description: "Multi-class classification system achieving 94% accuracy across 5 disease categories using Random Forest and SVM. Applied PCA reducing dimensions by 60%.",
+    longDescription: "Engineered a comprehensive disease prediction system using ensemble machine learning techniques. The system classifies 5 different vector-borne diseases with 94% accuracy by combining Random Forest and SVM classifiers. Implemented PCA for dimensionality reduction, cutting feature dimensions by 60% and improving training speed by 3x while maintaining prediction accuracy. Designed for low-cost, easy deployment in resource-constrained environments.",
+    technologies: [
+      { name: "Python", icon: "🐍", color: "#3776AB" },
+      { name: "Scikit-learn", icon: "📈", color: "#F7931E" },
+      { name: "Random Forest", icon: "🌲", color: "#228B22" },
+      { name: "SVM", icon: "📊", color: "#FF6347" },
+      { name: "PCA", icon: "🔍", color: "#4B0082" },
+      { name: "Pandas", icon: "🐼", color: "#150458" },
+    ],
+    features: [
+      "94% accuracy across 5 disease categories",
+      "Ensemble of Random Forest and SVM classifiers",
+      "PCA reducing feature dimensions by 60%",
+      "3x faster model training time",
+      "Low-cost, easy to deploy solution",
+      "Designed for resource-constrained environments",
+    ],
+    github: "https://github.com/Aditya-0156/Vector-Borne-Disease-Prediction",
+    demo: null,
+    image: "/projects/disease-preview.png",
+    category: "AI/ML",
+    date: "2024",
+    featured: false,
+    stats: {
+      stars: "📊 94% Accuracy",
+      tech: "ML Classification",
+      type: "Healthcare AI"
+    }
+  },
+  {
+    id: 6,
+    title: "Stick Hero - JavaFX Game",
+    subtitle: "Object-Oriented Game Development",
+    description: "Classic stick-extending platform game built with JavaFX. Features smooth animations, collision detection, and progressive difficulty levels.",
+    longDescription: "Recreated the popular Stick Hero mobile game using JavaFX and object-oriented design principles. Implemented game physics, collision detection, score tracking, and progressive difficulty scaling. Demonstrates strong fundamentals in Java programming, OOP concepts, and game development patterns. (Yes, I can do more than just Python and AI! 🎮)",
+    technologies: [
+      { name: "Java", icon: "☕", color: "#007396" },
+      { name: "JavaFX", icon: "🎮", color: "#FF6C37" },
+      { name: "OOP", icon: "🏗️", color: "#4B0082" },
+      { name: "Game Dev", icon: "🕹️", color: "#FF1493" },
+    ],
+    features: [
+      "Smooth character animations and stick physics",
+      "Accurate collision detection system",
+      "Progressive difficulty scaling",
+      "High score tracking",
+      "Clean object-oriented architecture",
+      "Platform gap generation algorithm",
+    ],
+    github: "https://github.com/Aditya-0156/Stick-Hero-JavaFx-",
+    demo: null,
+    image: "/projects/stick-hero-preview.png",
+    category: "Game Dev",
+    date: "2023",
+    featured: false,
+    stats: {
+      stars: "🎮 Java",
+      tech: "JavaFX",
+      type: "Game"
+    }
+  },
+  {
+    id: 7,
+    title: "Network Security Analysis Tools",
+    subtitle: "Python-Based Security Utilities",
+    description: "Collection of network security analysis and testing tools built with Python. Includes packet analysis, vulnerability scanning, and network monitoring utilities.",
+    longDescription: "Developed various network security tools and utilities for penetration testing and network analysis. Implemented packet sniffing, security vulnerability assessment, and network traffic monitoring capabilities. Part of coursework in Network Security at IIIT-Delhi, applying theoretical concepts to practical security scenarios.",
+    technologies: [
+      { name: "Python", icon: "🐍", color: "#3776AB" },
+      { name: "Networking", icon: "🌐", color: "#00BCD4" },
+      { name: "Security", icon: "🔒", color: "#FF5722" },
+      { name: "Packet Analysis", icon: "📦", color: "#9C27B0" },
+    ],
+    features: [
+      "Network packet analysis and monitoring",
+      "Security vulnerability scanning",
+      "Traffic pattern analysis",
+      "Protocol implementation and testing",
+      "Network forensics capabilities",
+      "Educational security testing framework",
+    ],
+    github: "https://github.com/Aditya-0156/Network-Security",
+    demo: null,
+    image: "/projects/network-security-preview.png",
+    category: "Security",
+    date: "2024",
+    featured: false,
+    stats: {
+      stars: "🔒 Security",
+      tech: "Python",
+      type: "Tools"
+    }
+  },
 ];
 
 export const categories = [
   "All",
   "AI/ML",
-  "Web Development",
-  "Full-Stack",
-  "Mobile",
-  "DevOps"
+  "Research",
+  "Game Dev",
+  "Security",
+  "Healthcare AI"
 ];
