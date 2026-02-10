@@ -185,7 +185,7 @@ export default function Hero() {
                       </div>
                       <div>
                         <span className="text-accent-cyan">role:</span>
-                        <span className="text-green-400"> "AI/ML Engineer"</span>,
+                        <span className="text-green-400"> "Software Developer"</span>,
                       </div>
                       <div>
                         <span className="text-accent-cyan">company:</span>
@@ -195,7 +195,7 @@ export default function Hero() {
                         <span className="text-accent-cyan">expertise:</span>
                         <span className="text-gray-400"> [</span>
                         <span className="text-green-400">"Python"</span>,
-                        <span className="text-green-400"> "Deep Learning"</span>
+                        <span className="text-green-400"> "Automation"</span>
                         <span className="text-gray-400">]</span>,
                       </div>
                       <div>
