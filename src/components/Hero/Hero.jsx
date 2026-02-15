@@ -155,9 +155,9 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* 3D Visual Element */}
+          {/* Code Card - visible on all screen sizes */}
           <motion.div
-            className="relative hidden lg:block"
+            className="relative mt-8 lg:mt-0"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
@@ -166,19 +166,19 @@ export default function Hero() {
               {/* Floating Card */}
               <div className="relative perspective-1000">
                 <motion.div
-                  className="relative glass rounded-3xl p-8 border-2 border-primary-500/20 shadow-2xl shadow-primary-500/20 transform-3d"
+                  className="relative glass rounded-2xl sm:rounded-3xl p-5 sm:p-8 border-2 border-primary-500/20 shadow-2xl shadow-primary-500/20 transform-3d"
                   whileHover={{ rotateY: 5, rotateX: 5 }}
                   transition={{ type: 'spring', stiffness: 300 }}
                 >
                   {/* Code snippet decoration */}
-                  <div className="space-y-3 font-mono text-sm">
+                  <div className="space-y-2 sm:space-y-3 font-mono text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-accent-purple">const</span>
                       <span className="text-accent-cyan">developer</span>
                       <span className="text-gray-400">=</span>
                       <span className="text-primary-400">{'{'}</span>
                     </div>
-                    <div className="pl-6 space-y-2">
+                    <div className="pl-4 sm:pl-6 space-y-1.5 sm:space-y-2">
                       <div>
                         <span className="text-accent-cyan">name:</span>
                         <span className="text-green-400"> "Aditya Yadav"</span>,
@@ -200,7 +200,7 @@ export default function Hero() {
                       </div>
                       <div>
                         <span className="text-accent-cyan">achievements:</span>
-                        <span className="text-green-400"> "🏆 IEEE Best Paper"</span>,
+                        <span className="text-green-400"> "IEEE Best Paper"</span>,
                       </div>
                       <div>
                         <span className="text-accent-cyan">hireable:</span>
@@ -216,9 +216,9 @@ export default function Hero() {
                 </motion.div>
               </div>
 
-              {/* Orbiting elements */}
+              {/* Orbiting elements - hidden on small screens to avoid clutter */}
               <motion.div
-                className="absolute -top-8 -right-8 w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-cyan rounded-full shadow-lg shadow-primary-500/50"
+                className="absolute -top-8 -right-8 w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-cyan rounded-full shadow-lg shadow-primary-500/50 hidden sm:block"
                 animate={{
                   y: [0, -20, 0],
                   rotate: 360,
@@ -231,7 +231,7 @@ export default function Hero() {
               />
 
               <motion.div
-                className="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-accent-purple to-accent-pink rounded-lg shadow-lg shadow-accent-purple/50"
+                className="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-accent-purple to-accent-pink rounded-lg shadow-lg shadow-accent-purple/50 hidden sm:block"
                 animate={{
                   y: [0, 20, 0],
                   rotate: -360,

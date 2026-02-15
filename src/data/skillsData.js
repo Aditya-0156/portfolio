@@ -1,50 +1,46 @@
 export const skills = {
   "Programming Languages": [
-    { name: "Python", level: 95, icon: "🐍", color: "#3776AB" },
-    { name: "Java", level: 85, icon: "☕", color: "#007396" },
-    { name: "C/C++", level: 80, icon: "⚙️", color: "#00599C" },
-    { name: "SQL", level: 85, icon: "🗃️", color: "#4479A1" },
-    { name: "JavaScript", level: 70, icon: "💛", color: "#F7DF1E" },
-    { name: "HTML/CSS", level: 65, icon: "🌐", color: "#E34F26" },
+    { name: "Python", level: 85, icon: "🐍", color: "#3776AB" },
+    { name: "Java", level: 55, icon: "☕", color: "#007396" },
+    { name: "C/C++", level: 50, icon: "⚙️", color: "#00599C" },
+    { name: "SQL", level: 60, icon: "🗃️", color: "#4479A1" },
+    { name: "JavaScript", level: 35, icon: "💛", color: "#F7DF1E" },
+    { name: "HTML/CSS", level: 35, icon: "🌐", color: "#E34F26" },
   ],
   "ML/AI & Data Science": [
-    { name: "TensorFlow", level: 90, icon: "🧠", color: "#FF6F00" },
-    { name: "Keras", level: 90, icon: "📊", color: "#D00000" },
-    { name: "PyTorch", level: 85, icon: "🔥", color: "#EE4C2C" },
-    { name: "Scikit-learn", level: 95, icon: "📈", color: "#F7931E" },
-    { name: "Hugging Face", level: 88, icon: "🤗", color: "#FFD21E" },
-    { name: "Pandas", level: 92, icon: "🐼", color: "#150458" },
-    { name: "NumPy", level: 92, icon: "🔢", color: "#013243" },
-    { name: "Matplotlib", level: 85, icon: "📉", color: "#11557C" },
-    { name: "Deep Learning", level: 90, icon: "🔬", color: "#8B5CF6" },
-    { name: "NLP", level: 88, icon: "💬", color: "#10B981" },
+    { name: "Scikit-learn", level: 80, icon: "📈", color: "#F7931E" },
+    { name: "TensorFlow / Keras", level: 70, icon: "🧠", color: "#FF6F00" },
+    { name: "Pandas / NumPy", level: 80, icon: "🐼", color: "#150458" },
+    { name: "Deep Learning", level: 65, icon: "🔬", color: "#8B5CF6" },
+    { name: "PyTorch", level: 45, icon: "🔥", color: "#EE4C2C" },
+    { name: "NLP", level: 50, icon: "💬", color: "#10B981" },
+    { name: "Hugging Face", level: 50, icon: "🤗", color: "#FFD21E" },
+    { name: "Matplotlib", level: 70, icon: "📉", color: "#11557C" },
   ],
-  "AI Tools & Frameworks": [
-    { name: "LangChain", level: 85, icon: "🦜", color: "#1C3C3C" },
-    { name: "ChromaDB", level: 80, icon: "💾", color: "#FF6B6B" },
-    { name: "Azure OpenAI", level: 85, icon: "☁️", color: "#0078D4" },
-    { name: "GPT-4", level: 88, icon: "✨", color: "#10A37F" },
-    { name: "Google Gemini", level: 85, icon: "💎", color: "#4285F4" },
+  "AI-Integrated Development": [
+    { name: "Azure OpenAI + GPT-4", level: 75, icon: "☁️", color: "#0078D4" },
+    { name: "LangChain", level: 55, icon: "🦜", color: "#1C3C3C" },
+    { name: "ChromaDB", level: 50, icon: "💾", color: "#FF6B6B" },
+    { name: "Google Gemini", level: 45, icon: "💎", color: "#4285F4" },
+    { name: "Claude Code / Cursor", level: 80, icon: "🤖", color: "#FF6B6B" },
   ],
-  "Backend & APIs": [
-    { name: "Flask", level: 90, icon: "⚗️", color: "#000000" },
-    { name: "FastAPI", level: 85, icon: "⚡", color: "#009688" },
-    { name: "REST APIs", level: 90, icon: "🔌", color: "#FF6C37" },
+  "Backend & APIs (AI-Assisted)": [
+    { name: "Flask", level: 55, icon: "⚗️", color: "#000000" },
+    { name: "FastAPI", level: 45, icon: "⚡", color: "#009688" },
+    { name: "REST APIs", level: 60, icon: "🔌", color: "#FF6C37" },
   ],
   "Tools & Platforms": [
-    { name: "Azure", level: 85, icon: "☁️", color: "#0078D4" },
-    { name: "Git", level: 90, icon: "🔀", color: "#F05032" },
-    { name: "GitHub", level: 90, icon: "🐙", color: "#181717" },
-    { name: "CI/CD", level: 80, icon: "🔄", color: "#2088FF" },
-    { name: "Linux", level: 88, icon: "🐧", color: "#FCC624" },
-    { name: "Docker", level: 75, icon: "🐳", color: "#2496ED" },
-    { name: "Agile/Scrum", level: 85, icon: "📋", color: "#0052CC" },
+    { name: "Git / GitHub", level: 75, icon: "🔀", color: "#F05032" },
+    { name: "Linux", level: 65, icon: "🐧", color: "#FCC624" },
+    { name: "CI/CD", level: 50, icon: "🔄", color: "#2088FF" },
+    { name: "Docker", level: 35, icon: "🐳", color: "#2496ED" },
+    { name: "Agile/Scrum", level: 60, icon: "📋", color: "#0052CC" },
   ],
-  "Frontend (with a little AI magic ✨)": [
-    { name: "React", level: 70, icon: "⚛️", color: "#61DAFB" },
-    { name: "Tailwind CSS", level: 65, icon: "🎨", color: "#06B6D4" },
-    { name: "HTML/CSS", level: 65, icon: "🌐", color: "#E34F26" },
-    { name: "AI-Assisted Development", level: 95, icon: "🤖", color: "#FF6B6B" },
+  "Frontend (AI does the heavy lifting 😉)": [
+    { name: "React", level: 30, icon: "⚛️", color: "#61DAFB" },
+    { name: "Tailwind CSS", level: 25, icon: "🎨", color: "#06B6D4" },
+    { name: "HTML/CSS", level: 35, icon: "🌐", color: "#E34F26" },
+    { name: "AI-Assisted Development", level: 90, icon: "🤖", color: "#FF6B6B" },
   ],
 };
 
@@ -70,13 +66,13 @@ export const highlights = [
     icon: "🎓"
   },
   {
-    title: "Automation Specialist",
-    description: "GPT-4, Azure OpenAI, CI/CD pipelines, and intelligent tools",
+    title: "AI-Integrated Developer",
+    description: "Claude Code, Cursor, GPT-4, Azure OpenAI - I ship with AI help",
     icon: "🤖"
   },
   {
-    title: "Quirky Coder",
-    description: "Can build anything - Python, Java, C#, or AI-powered frontend! 😉",
+    title: "Honest About Skills",
+    description: "I know Python well, the rest I figure out with AI. And it works! 😉",
     icon: "😎"
   },
 ];
