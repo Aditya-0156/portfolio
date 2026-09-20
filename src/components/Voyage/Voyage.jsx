@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { buildProbe } from '../../lib/probe.js';
-import { createBlackHole } from '../../lib/blackhole.js';
 import {
-  lerp, clamp01, smooth, band, peak, glowTexture, ringTexture, sprite, points,
-  starfield, debrisShell, spiralGalaxy, jet, gasGiant,
+  lerp, clamp01, band, peak, glowTexture, ringTexture, sprite, points,
+  starfield, debrisShell, accretionDisk, spiralGalaxy, jet, gasGiant,
 } from '../../lib/space.js';
 import { useNova } from '../../hooks/useNova.js';
 import { useRipple } from '../../hooks/useRipple.js';
@@ -54,26 +53,11 @@ function toStationSpace(raw, anchors) {
 }
 
 // The set pieces, placed just past the station that reads them.
-const P_GIANT = new THREE.Vector3(295, -50, -600);
-const P_NOVA = new THREE.Vector3(150, 26, -1160);
-const P_REMNANT = new THREE.Vector3(215, 18, -1830);
-const P_MERGER = new THREE.Vector3(225, -18, -2600);
-const P_QUASAR = new THREE.Vector3(265, 46, -3450);
-
-// The probe's flight plan. At each station it holds a different part of the frame and turns to
-// face whatever is out there, the way a shot in a film is staged rather than letting the craft
-// drift. `side` and `lift` are fractions of the visible frame at that distance, so the staging
-// holds on a phone as well as on a wide screen; `lead` is how far ahead of the camera it rides.
-const FLIGHT = [
-  { side: 0.55, lift: -0.02, lead: 150, watch: null },      // 01 launch, running clear of home
-  { side: -0.42, lift: 0.20, lead: 125, watch: 'giant' },   // 02 crossed left, looking back at the planet
-  { side: 0.62, lift: -0.16, lead: 175, watch: 'nova' },    // 03 out right, facing the star as it goes
-  { side: -0.35, lift: 0.28, lead: 110, watch: 'remnant' }, // 04 back through the remains
-  { side: 0.60, lift: -0.08, lead: 190, watch: 'merger' },  // 05 right again, turned to the merger
-  { side: -0.45, lift: 0.18, lead: 135, watch: 'quasar' },  // 06 left, jets across the frame
-  { side: 0.40, lift: 0.30, lead: 235, watch: null },       // 07 drifting out toward the cluster
-  { side: -0.25, lift: 0.40, lead: 310, watch: null },      // 08 small, far, still going
-];
+const P_GIANT = new THREE.Vector3(-250, -40, -520);
+const P_NOVA = new THREE.Vector3(52, 18, -1130);
+const P_REMNANT = new THREE.Vector3(-52, 12, -1775);
+const P_MERGER = new THREE.Vector3(-62, -12, -2400);
+const P_QUASAR = new THREE.Vector3(104, 32, -3040);
 
 /**
  * The voyage. A fixed canvas behind the whole page: the probe leaves at the top, and the reader
@@ -126,7 +110,6 @@ export default function Voyage({ reduced, isPhone }) {
     // particle clouds stop adding light and start laying down pigment, and the glows, which only
     // exist to brighten a dark sky, stand down. Collected here so the swap is one pass.
     const cloudMats = [];
-    const shaderDisks = [];
     const glowSprites = [];
     const INK = new THREE.Color(0x141517);
 
@@ -224,53 +207,61 @@ export default function Voyage({ reduced, isPhone }) {
     const remnantGlow = sprite(TEX.ember, 520, 0); remnantGlow.position.copy(P_REMNANT); scene.add(remnantGlow);
 
     // ── 05 · Black hole merger ────────────────────────────────────────────
-    // The subject here is the hole, not a carousel. The pair makes about one and a half turns
-    // across the whole approach and the turn is driven by scroll, so nothing spins on its own
-    // while the reader is sitting still. Everything else is the disk and the light bent round it.
     const binary = new THREE.Group();
     binary.position.copy(P_MERGER);
-    binary.rotation.y = 0.42;
+    binary.rotation.y = 0.5;
     scene.add(binary);
-    const bhA = createBlackHole({ radius: 17.5, tilt: 0.2, spin: 1, seed: 0 });
-    const bhB = createBlackHole({ radius: 10.5, tilt: -0.26, spin: 1.5, seed: 1 });
-    binary.add(bhA.group, bhB.group);
-
+    function blackHole(radius, diskSeed) {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 48), new THREE.MeshBasicMaterial({ color: 0x000000 })));
+      const photon = sprite(TEX.ringThin, radius * 7.4, 0.95);
+      g.add(photon);
+      const disk = accretionDisk(N(6000, 2200), radius * 2, radius * 8, [1, 0.6, 0.34], diskSeed);
+      disk.mesh.rotation.x = 0.34;
+      g.add(disk.mesh);
+      return { g, disk, photon };
+    }
+    const bhA = blackHole(13, 23);
+    const bhB = blackHole(10.5, 29);
+    binary.add(bhA.g, bhB.g);
     const kilonova = debrisShell(N(10000, 3200), { reach: 900, sizeScale: SMALL ? 1.2 : 1, hot: [0.92, 0.98, 1], cool: [0.62, 0.36, 1], seed: 17 });
     kilonova.mesh.position.copy(P_MERGER);
     scene.add(kilonova.mesh);
     const mergeFlash = sprite(TEX.blue, 10, 0, false); mergeFlash.position.copy(P_MERGER); scene.add(mergeFlash);
-    // Three wave fronts leaving together: what the page ripple is a picture of.
+    // Three rings leaving together: what the page ripple is a picture of.
     const waves = [0, 1, 2].map(() => {
-      const w = sprite(TEX.ringCold, 10, 0);
-      w.position.copy(P_MERGER);
-      scene.add(w);
-      return w;
+      const s = sprite(TEX.ringCold, 10, 0);
+      s.position.copy(P_MERGER);
+      scene.add(s);
+      return s;
     });
 
     // ── 06 · Quasar ───────────────────────────────────────────────────────
-    // The same hole, scaled up and fed hard, with the jets its poles throw out.
     const quasar = new THREE.Group();
     quasar.position.copy(P_QUASAR);
-    quasar.rotation.z = 0.32;
+    quasar.rotation.z = 0.34;
     scene.add(quasar);
-    const qHole = createBlackHole({ radius: 20, tilt: 0.14, spin: 1.8, seed: 2 });
-    quasar.add(qHole.group);
+    quasar.add(new THREE.Mesh(new THREE.SphereGeometry(15, 48, 48), new THREE.MeshBasicMaterial({ color: 0x000000 })));
+    const qDisk = accretionDisk(N(8000, 2600), 27, 128, [1, 0.74, 0.46], 37);
+    qDisk.mesh.rotation.x = 0.16;
+    quasar.add(qDisk.mesh);
+    quasar.add(sprite(TEX.ringThin, 112, 0.9));
     const jetUp = jet(N(4000, 1400), 620, 34);
     const jetDown = jet(N(4000, 1400), 620, 34, 43);
     jetDown.rotation.z = Math.PI;
     quasar.add(jetUp, jetDown);
-    const qCore = sprite(TEX.blue, 150, 0.7);
+    const qCore = sprite(TEX.blue, 160, 0.75);
     quasar.add(qCore);
 
     // ── 07 · The cluster ──────────────────────────────────────────────────
     const cluster = new THREE.Group();
     scene.add(cluster);
     [
-      [-300, 150, -3760, 190, 0.5, 2],
-      [420, -160, -3980, 240, -0.8, 2],
-      [80, 230, -4160, 160, 1.2, 3],
-      [620, 110, -4340, 260, 0.3, 2],
-      [-480, -60, -4520, 200, -0.4, 2],
+      [-420, 120, -3640, 190, 0.5, 2],
+      [330, -160, -3860, 240, -0.8, 2],
+      [-120, 210, -4060, 160, 1.2, 3],
+      [500, 90, -4260, 260, 0.3, 2],
+      [-560, -80, -4460, 200, -0.4, 2],
     ].forEach(([x, y, z, r, tilt, arms], i) => {
       const gal = spiralGalaxy(N(5200, 1800), r, arms, 31 + i * 7);
       gal.position.set(x, y, z);
@@ -285,7 +276,6 @@ export default function Voyage({ reduced, isPhone }) {
     scene.traverse((o) => {
       if (o.isPoints) cloudMats.push({ mat: o.material, base: o.material.opacity });
       else if (o.isSprite && o !== probeGlint) glowSprites.push({ s: o, base: o.material.opacity });
-      else if (o.isMesh && o.material && o.material.isShaderMaterial) shaderDisks.push(o.material);
     });
 
     let isLight = document.documentElement.dataset.theme === 'light';
@@ -303,8 +293,6 @@ export default function Voyage({ reduced, isPhone }) {
       });
       // The glows exist to brighten a dark sky. On paper they would only wash it out.
       glowSprites.forEach(({ s: sp }) => { sp.userData.muted = isLight; });
-      // On paper the disks lay down ink rather than adding light.
-      shaderDisks.forEach((m) => { m.blending = isLight ? THREE.NormalBlending : THREE.AdditiveBlending; m.needsUpdate = true; });
       ambient.intensity = isLight ? 1.15 : 0.42;
       homeStar.intensity = isLight ? 3 : 7;
     };
@@ -351,13 +339,6 @@ export default function Voyage({ reduced, isPhone }) {
 
     const look = new THREE.Vector3();
     const clock = new THREE.Clock();
-    // Scratch objects for aiming the probe, allocated once.
-    const probeAim = new THREE.Vector3();
-    const probeQuat = new THREE.Quaternion();
-    const probeTarget = new THREE.Matrix4();
-    const UP = new THREE.Vector3(0, 1, 0);
-    const TIP = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
-    const WATCH = { giant: P_GIANT, nova: P_NOVA, remnant: P_REMNANT, merger: P_MERGER, quasar: P_QUASAR };
 
     // Sprite opacity is written all over the frame; this is the one gate that mutes them on paper.
     const glow = (spr, value) => { spr.material.opacity = spr.userData.muted ? 0 : value; };
@@ -377,43 +358,13 @@ export default function Voyage({ reduced, isPhone }) {
       camera.lookAt(look);
       camera.rotation.z = Math.sin(t * 4.8) * 0.028;
 
-      // The probe is staged rather than parked: it crosses the frame between stations and turns
-      // to face whatever is out there, easing between plans so the path is one continuous flight.
-      const f = clamp01(t) * (FLIGHT.length - 1);
-      const fi = Math.min(FLIGHT.length - 2, Math.floor(f));
-      const fm = smooth(clamp01(f - fi));
-      const A = FLIGHT[fi];
-      const B = FLIGHT[fi + 1];
-      const lead = lerp(A.lead, B.lead, fm);
-      // Half the visible frame at the distance the probe is riding, so the staging is the same
-      // shot on any screen.
-      const halfH = lead * Math.tan((camera.fov * Math.PI) / 360);
-      const halfW = halfH * camera.aspect;
-      const side = lerp(A.side, B.side, fm) * halfW;
-      const lift = lerp(A.lift, B.lift, fm) * halfH;
-      probe.position.set(
-        sway + side + Math.sin(time * 0.27) * 4,
-        6 + lift + Math.sin(time * 0.35) * 3,
-        camZ - lead,
+      // The probe rides ahead and to the right, turning slowly as it travels.
+      probe.position.set(sway + 44, 4 + Math.sin(time * 0.35) * 2.5, camZ - 96);
+      probe.rotation.set(
+        0.2 + Math.sin(time * 0.21) * 0.07,
+        time * 0.075 + 0.8,
+        0.16 + Math.cos(time * 0.17) * 0.06,
       );
-
-      // Face the subject of this leg, and hold a slow roll so it never looks bolted in place.
-      const watch = (fm < 0.5 ? A.watch : B.watch);
-      const subject = watch ? WATCH[watch] : null;
-      if (subject) {
-        probeAim.copy(subject);
-      } else {
-        // Nothing to look at: hold the heading it already has, a little off the flight path.
-        probeAim.set(probe.position.x + side * 0.4, probe.position.y - 12, probe.position.z - 320);
-      }
-      probeTarget.lookAt(probe.position, probeAim, UP);
-      probeQuat.setFromRotationMatrix(probeTarget);
-      // The dish faces along +Y in the model, so tip it onto the line of sight.
-      probeQuat.multiply(TIP);
-      probe.quaternion.slerp(probeQuat, 0.035);
-      probe.rotateY(Math.sin(time * 0.19) * 0.004);
-      probe.rotateZ(Math.sin(time * 0.13) * 0.003);
-
       const probeFade = clamp01(1 - band(t, 0.80, 0.94));
       probe.visible = probeFade > 0.02;
       if (probe.visible) {
@@ -466,43 +417,42 @@ export default function Voyage({ reduced, isPhone }) {
       glow(neutronStar, rem * (0.65 + Math.sin(time * 12) * 0.35));
 
       // ── 05 · the merger ──
-      const inspiral = band(t, 0.455, 0.585);
-      // One and a half turns across the whole approach, and not a degree more.
-      const orbit = 0.4 + inspiral * Math.PI * 3;
-      const sep = lerp(118, 0, Math.pow(inspiral, 1.7));
-      const merged = inspiral > 0.985;
-      bhA.group.position.set(Math.cos(orbit) * sep * 0.38, 0, Math.sin(orbit) * sep * 0.38);
-      bhB.group.position.set(-Math.cos(orbit) * sep * 0.62, 0, -Math.sin(orbit) * sep * 0.62);
-      bhB.group.visible = !merged;
-      // The gas churns harder and the disks pull in as the orbit decays.
-      bhA.update(time, camera, { turb: inspiral, squeeze: lerp(1, 0.78, inspiral), opacity: 1 });
-      bhB.update(time, camera, { turb: inspiral, squeeze: lerp(1, 0.6, inspiral), opacity: merged ? 0 : 1 });
-      // What is left rings down: a little larger, and settling rather than spinning.
-      bhA.group.scale.setScalar(merged ? 1.28 : 1);
-      binary.rotation.y = 0.42 + time * 0.004;
+      const inspiral = band(t, 0.475, 0.575);
+      const sep = lerp(130, 20, Math.pow(inspiral, 2));
+      const orbit = time * (0.5 + inspiral * 7) + inspiral * 30;
+      const merged = inspiral > 0.99;
+      bhA.g.position.set(Math.cos(orbit) * sep * 0.45, 0, Math.sin(orbit) * sep * 0.45);
+      bhB.g.position.set(-Math.cos(orbit) * sep * 0.55, 0, -Math.sin(orbit) * sep * 0.55);
+      bhB.g.visible = !merged;
+      const squeeze = lerp(1, 0.55, inspiral);
+      bhA.disk.spin(0.02 * (1 + inspiral * 4), squeeze);
+      bhB.disk.spin(0.02 * (1 + inspiral * 4), squeeze);
+      bhA.g.scale.setScalar(merged ? 1.35 : 1);
+      binary.rotation.y = 0.5 + time * 0.03;
 
-      const kn = band(t, 0.585, 0.655);
+      const kn = band(t, 0.578, 0.655);
       kilonova.advance(kn);
       const knFlash = peak(kn, 0.08, 0.12);
       glow(mergeFlash, knFlash);
       mergeFlash.scale.setScalar(200 + kn * 2200);
       mergerLight.intensity = knFlash * 3600;
 
+      // Three wave fronts, launched in sequence as the holes come together.
       const waveDrive = clamp01(band(t, 0.50, 0.685));
       waves.forEach((w, i) => {
         const wu = clamp01(waveDrive * 3 - i * 0.55);
-        glow(w, wu > 0 && wu < 1 ? Math.sin(wu * Math.PI) * 0.5 : 0);
+        glow(w, wu > 0 && wu < 1 ? Math.sin(wu * Math.PI) * 0.55 : 0);
         w.scale.setScalar(120 + Math.pow(wu, 0.7) * 2600);
       });
 
       // The merger leaves the canvas: the layout rings as the wave goes through it.
       if (waveDrive > 0.001 && waveDrive < 0.999) {
-        const sc = toScreen(P_MERGER);
+        const s = toScreen(P_MERGER);
         const envelope = Math.sin(clamp01(waveDrive) * Math.PI);
         ripple.current.report({
           active: true,
-          x: sc.x,
-          y: sc.y,
+          x: s.x,
+          y: s.y,
           amplitude: (SMALL ? 9 : 15) * envelope * (0.45 + inspiral * 0.55),
           wavelength: 130,
           phase: waveDrive * 26 + time * 3.4,
@@ -512,12 +462,12 @@ export default function Voyage({ reduced, isPhone }) {
       }
 
       // ── 06 · quasar ──
-      qHole.update(time, camera, { turb: 0.45, opacity: 1 });
-      quasar.rotation.y = time * 0.012;
+      qDisk.spin(0.022);
+      quasar.rotation.y = time * 0.05;
       const jetPulse = 0.5 + Math.sin(time * 1.7) * 0.13;
       jetUp.material.opacity = jetPulse;
       jetDown.material.opacity = jetPulse;
-      glow(qCore, 0.6 + Math.sin(time * 3.3) * 0.14);
+      glow(qCore, 0.68 + Math.sin(time * 3.3) * 0.16);
 
       sky.rotation.y = time * 0.003;
       nearDust.position.z = camZ * 0.6;
@@ -529,8 +479,8 @@ export default function Voyage({ reduced, isPhone }) {
       st.t = 0;
       camera.position.set(0, 16, Z0);
       camera.lookAt(0, 6, Z0 - 320);
-      probe.position.set(118, 8, Z0 - 150);
-      probe.rotation.set(0.24, 0.7, 0.14);
+      probe.position.set(44, 4, Z0 - 96);
+      probe.rotation.set(0.2, 0.8, 0.16);
       blast.advance(0);
       kilonova.advance(0);
       remnant.material.opacity = 0;
@@ -552,7 +502,6 @@ export default function Voyage({ reduced, isPhone }) {
           mats.forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); });
         }
       });
-      bhA.dispose(); bhB.dispose(); qHole.dispose();
       renderer.dispose();
     };
   }, [reduced, isPhone, nova, ripple]);
