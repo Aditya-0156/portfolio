@@ -8,19 +8,15 @@
   <meta property="og:title" content="Aditya Yadav">
   <meta property="og:description" content="Forward Deployment Engineer at Cornerstone OnDemand. LLM agents, backend services, and applied machine learning. Projects, research, and publications.">
   <meta property="og:type" content="website">
-  <meta name="theme-color" content="#0B0C0E" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#F7F7F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0B0C0E">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230B0C0E'/%3E%3Crect x='10' y='10' width='4' height='4' fill='%23FF5A36'/%3E%3C/svg%3E">
-  <link rel="icon" media="(prefers-color-scheme: light)" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23F7F7F5'/%3E%3Crect x='10' y='10' width='4' height='4' fill='%23C9270B'/%3E%3C/svg%3E">
   <script>
     (function () {
       var d = document.documentElement; d.classList.add('js');
+      // Always dark. The site is a voyage through deep space; the light mode button exists to
+      // have an argument with you about that, not to ship a light theme.
       var t = 'dark', skip = false;
-      try {
-        var s = localStorage.getItem('theme');
-        t = (s === 'light' || s === 'dark') ? s : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-        skip = sessionStorage.getItem('intro') === '1';
-      } catch (e) {}
+      try { skip = sessionStorage.getItem('intro') === '1'; } catch (e) {}
       d.dataset.theme = t;
       d.dataset.intro = skip ? 'skip' : 'pending';
     })();

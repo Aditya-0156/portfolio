@@ -12,33 +12,18 @@ function apply(next) {
 
 /**
  * { theme, toggle(event) }. The switch is a circle that grows from the toggle button through
- * the View Transitions API; browsers without it get a 300 ms colour transition. The stored
- * choice wins; the OS preference is followed only while nothing is stored.
+ * the View Transitions API; browsers without it get a 300 ms colour transition. The site is dark
+ * and stays dark: nothing here follows the operating system, and the light mode button opens an
+ * argument rather than a theme.
  */
 export function useTheme() {
   const [theme, setTheme] = useState(readTheme);
 
   useEffect(() => {
-    const mq = matchMedia('(prefers-color-scheme: light)');
-    const onChange = (e) => {
-      let stored = null;
-      try {
-        stored = localStorage.getItem('theme');
-      } catch {
-        /* ignore */
-      }
-      if (stored === 'light' || stored === 'dark') return;
-      const next = e.matches ? 'light' : 'dark';
-      apply(next);
-      setTheme(next);
-    };
-    mq.addEventListener('change', onChange);
+    // No OS listener: the site is dark, and the toggle is a conversation rather than a switch.
     const onExternal = (e) => setTheme(e.detail === 'light' ? 'light' : 'dark');
     window.addEventListener('theme:change', onExternal);
-    return () => {
-      mq.removeEventListener('change', onChange);
-      window.removeEventListener('theme:change', onExternal);
-    };
+    return () => window.removeEventListener('theme:change', onExternal);
   }, []);
 
   const toggle = useCallback((event) => {
