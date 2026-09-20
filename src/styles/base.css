@@ -138,7 +138,7 @@
   .section { position: relative; }
   .section__grid { padding-block: var(--section-pad); }
   .section__rail { grid-column: 1 / -1; margin-bottom: var(--s-5); }
-  .section__content { grid-column: 1 / -1; }
+  .section__content { grid-column: 1 / -1; will-change: transform, opacity; }
   .section__index { display: block; color: var(--fg-2); transition: color var(--d-fast) var(--ease-inout); }
   .section[data-active="true"] .section__index { color: var(--fg-0); }
   .section__title { margin-top: var(--s-2); }

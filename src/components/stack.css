@@ -1,8 +1,16 @@
 @layer components {
-  .stack__groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
-  @media (min-width: 600px) { .stack__groups { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); } }
+  .stack__columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+  @media (min-width: 600px) { .stack__columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); } }
   .stack__rule { margin: var(--s-3) 0 var(--s-4); }
   .stack__items > li + li { margin-top: var(--s-2); }
   .stack__item { color: var(--fg-0); }
-  .stack__note { margin-top: var(--s-6); }
+
+  /* The quiet group: one wrapped line of mono, set apart and deliberately the least of it. */
+  .stack__group--inline { margin-top: var(--s-7); }
+  .stack__items--inline { display: flex; flex-wrap: wrap; gap: 0 var(--s-4); }
+  .stack__items--inline > li { color: var(--fg-2); }
+  .stack__items--inline > li + li { margin-top: 0; }
+  .stack__items--inline > li + li::before { content: "\00b7"; margin-right: var(--s-4); color: var(--fg-3); }
+
+  .stack__note { margin-top: var(--s-6); max-width: 62ch; }
 }

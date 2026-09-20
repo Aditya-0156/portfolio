@@ -1,10 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import Section from '../Section.jsx';
 import Mono from '../Mono.jsx';
-import SpectrumPanel from '../Spectrum/SpectrumPanel.jsx';
 import { useRevealOnce } from '../../hooks/useRevealOnce.js';
 import { useCountUp } from '../../hooks/useCountUp.js';
-import { useMotionPrefs } from '../../hooks/useMotionPrefs.js';
 import './research.css';
 
 function Figure({ value, from, unit, label, decimals = 0, active }) {
@@ -55,17 +53,9 @@ function Publication({ venue, title, authors, award }) {
   );
 }
 
-export default function Research({ content, spectrum }) {
+export default function Research({ content }) {
   const stripRef = useRef(null);
-  const canvasRef = useRef(null);
-  const figRef = useRef(null);
   const active = useRevealOnce(stripRef, { threshold: 0.4, rootMargin: '0px' });
-  const scanned = useRevealOnce(figRef, { threshold: 0.4, rootMargin: '0px' });
-  const { isPhone } = useMotionPrefs();
-
-  useEffect(() => {
-    if (scanned && canvasRef.current) canvasRef.current.runScan();
-  }, [scanned]);
 
   return (
     <Section id="research" index="05" title={content.title} meta={content.meta}>
@@ -85,10 +75,6 @@ export default function Research({ content, spectrum }) {
           {p}
         </p>
       ))}
-
-      <div ref={figRef} className="research__figure">
-        <SpectrumPanel canvasRef={canvasRef} mode="static" content={spectrum} isPhone={isPhone} />
-      </div>
 
       <div className="pubs">
         <Mono label dim className="pubs__label" data-reveal="">

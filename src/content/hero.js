@@ -1,15 +1,16 @@
-// Hero copy. Shape from DESIGN_SPEC section 8.1 (hero.js). Values from COPY.json hero.
-// The component composes the role line as `${role} at ${company}, ${location}`.
-// The resume href is a bare file name; it resolves against the page URL under the
-// /portfolio/ base path, so no leading slash is stored here.
+// Hero copy. The hero says what Aditya works on and cares about, not what he shipped at any one
+// employer: the specifics of each role live in work.js and the specifics of each project in
+// projects.js. The component composes the role line as `${role} at ${company}, ${location}`.
+// The resume href is a bare file name; it resolves against the /portfolio/ base path.
 export default {
-  eyebrow: 'LLM agents and backend services',
+  eyebrow: 'Applied machine learning',
   name: 'Aditya Yadav',
   role: 'Forward Deployment Engineer',
   company: 'Cornerstone OnDemand',
   location: 'Hyderabad, India',
   statement:
-    'I work on Skills Architect, the agent in Cornerstone Workforce AI that reasons over an enterprise\'s own data. Before this I shipped AI document processing at HCLTech and trained a fault localizer for a 400 km optical testbed.',
+    'I work on machine learning and language models, and on the part people skip: making them hold up inside real software. The model is rarely the hard part. The system around it is.',
+  cue: 'Scroll',
   ctas: [
     { label: 'See projects', href: '#projects', kind: 'primary' },
     { label: 'GitHub', href: 'https://github.com/Aditya-0156', kind: 'secondary', external: true },

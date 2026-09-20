@@ -10,6 +10,7 @@ import Stack from './components/Stack.jsx';
 import Education from './components/Education.jsx';
 import Contact from './components/Contact.jsx';
 import Footer from './components/Footer.jsx';
+import FlowField from './components/Background/FlowField.jsx';
 import { ActiveSectionContext, useActiveSectionObserver } from './hooks/useActiveSection.js';
 import { useMotionPrefs } from './hooks/useMotionPrefs.js';
 import { useLenis } from './hooks/useLenis.js';
@@ -23,7 +24,6 @@ import research from './content/research.js';
 import stack from './content/stack.js';
 import education from './content/education.js';
 import contact from './content/contact.js';
-import spectrum from './content/spectrum.js';
 
 const SECTION_IDS = ['top', 'now', 'work', 'projects', 'research', 'stack', 'education', 'contact'];
 const INDEX_LABELS = {
@@ -55,14 +55,15 @@ export default function App() {
 
   return (
     <ActiveSectionContext.Provider value={active}>
+      <FlowField />
       <SkipLink targetId="content" label={site.nav.skipLabel} />
       <Nav content={site} indexLabels={INDEX_LABELS} extraLinks={extraLinks} />
       <main id="content">
-        <Hero content={hero} spectrum={spectrum} resumeHref={resumeHref} />
+        <Hero content={hero} resumeHref={resumeHref} />
         <Now content={now} />
         <Work content={work} />
         <Projects content={projects} />
-        <Research content={research} spectrum={spectrum} />
+        <Research content={research} />
         <Stack content={stack} />
         <Education content={education} />
         <Contact content={contact} resumeHref={resumeHref} />

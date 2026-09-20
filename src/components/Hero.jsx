@@ -1,32 +1,26 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import Button from './Button.jsx';
 import Clock from './Clock.jsx';
 import Mono from './Mono.jsx';
-import SpectrumPanel from './Spectrum/SpectrumPanel.jsx';
-import { useScrollProgress } from '../hooks/useScrollProgress.js';
 import { useMotionPrefs } from '../hooks/useMotionPrefs.js';
-import { gsap, hasJs, scrollToHash } from '../lib/motion.js';
+import { gsap, ScrollTrigger, hasJs, scrollToHash } from '../lib/motion.js';
 import './hero.css';
 
 /**
- * The hero: meta row, the name at display size, the role line, the statement, the CTA row, and
- * the live spectrum whose bottom hairline is the first rule of the page. The intro is one GSAP
- * timeline; the spectrum acquires channel by channel alongside it.
+ * The hero. The background field is the visual, so this holds nothing but type: the meta row, the
+ * name at display size, the role line, what Aditya works on, and the calls to action. On scroll
+ * the whole block drifts back and fades while the field opens out behind it.
  */
-export default function Hero({ content, spectrum, resumeHref }) {
+export default function Hero({ content, resumeHref }) {
   const rootRef = useRef(null);
-  const panelRef = useRef(null);
-  const canvasRef = useRef(null);
-  const { reduced, isPhone } = useMotionPrefs();
+  const { reduced } = useMotionPrefs();
 
   const roleLine = `${content.role} at ${content.company}, ${content.location}`;
 
-  // Intro: a single timeline, once per session. Scrolling early jumps to the end state.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || !hasJs()) return undefined;
     const html = document.documentElement;
-    const state = html.dataset.intro;
     const finish = () => {
       html.dataset.intro = 'done';
       try {
@@ -35,37 +29,29 @@ export default function Hero({ content, spectrum, resumeHref }) {
         /* ignore */
       }
     };
-    if (state === 'skip' || reduced) {
+    if (html.dataset.intro === 'skip' || reduced) {
       html.dataset.intro = 'done';
-      canvasRef.current && canvasRef.current.finishIntro();
       return undefined;
     }
     let killed = false;
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        paused: true,
-        defaults: { ease: 'power3.out' },
-        onComplete: finish,
-      });
+      const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' }, onComplete: finish });
       const navRule = document.querySelector('.nav__rule');
-      if (navRule) tl.to(navRule, { scaleX: 1, duration: 0.7, ease: 'power2.out' }, 0);
-      tl.to('.hero__meta .intro', { autoAlpha: 1, duration: 0.3, stagger: 0.06 }, 0.05)
-        .to('.hero__name .mask__inner', { yPercent: 0, duration: 0.95, stagger: 0.07 }, 0.1)
-        .to('.hero__role .mask__inner', { yPercent: 0, duration: 0.8 }, 0.32)
-        .to('.hero__statement', { autoAlpha: 1, y: 0, duration: 0.7 }, 0.46)
-        .to('.hero__ctas > *', { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.05 }, 0.58)
-        .to('.hero__spectrum .rule--intro', { scaleX: 1, duration: 0.8, ease: 'power2.out' }, 0.55)
-        .to('.hero__spectrum .spectrum__caption, .hero__spectrum .spectrum__axis', { autoAlpha: 1, duration: 0.35 }, 0.72);
+      if (navRule) tl.to(navRule, { scaleX: 1, duration: 0.8, ease: 'power2.out' }, 0);
+      tl.to('.hero__meta .intro', { autoAlpha: 1, duration: 0.4, stagger: 0.08 }, 0.05)
+        .to('.hero__name .mask__inner', { yPercent: 0, duration: 1.05, stagger: 0.08 }, 0.1)
+        .to('.hero__role .mask__inner', { yPercent: 0, duration: 0.85 }, 0.34)
+        .to('.hero__statement', { autoAlpha: 1, y: 0, duration: 0.75 }, 0.48)
+        .to('.hero__ctas > *', { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06 }, 0.6)
+        .to('.hero__cue', { autoAlpha: 1, duration: 0.5 }, 0.9);
 
-      gsap.set('.hero__statement, .hero__ctas > *', { autoAlpha: 0, y: 12 });
-      gsap.set('.hero__spectrum .spectrum__caption, .hero__spectrum .spectrum__axis', { autoAlpha: 0 });
-      gsap.set('.hero__meta .intro', { autoAlpha: 0 });
+      gsap.set('.hero__statement, .hero__ctas > *', { autoAlpha: 0, y: 14 });
+      gsap.set('.hero__meta .intro, .hero__cue', { autoAlpha: 0 });
 
       const start = () => {
         if (killed) return;
         html.dataset.intro = 'run';
         tl.play();
-        canvasRef.current && canvasRef.current.startIntro(performance.now() + 450);
       };
       const ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
       Promise.race([ready, new Promise((r) => setTimeout(r, 600))]).then(start);
@@ -73,7 +59,6 @@ export default function Hero({ content, spectrum, resumeHref }) {
       const onEarlyScroll = () => {
         if (window.scrollY > 40) {
           tl.progress(1);
-          canvasRef.current && canvasRef.current.finishIntro();
           finish();
           window.removeEventListener('scroll', onEarlyScroll);
         }
@@ -91,17 +76,26 @@ export default function Hero({ content, spectrum, resumeHref }) {
     };
   }, [reduced]);
 
-  // Collapse: the spectrum flattens as the hero scrolls away.
-  const onProgress = useCallback((p) => {
+  // The camera pulls back from the hero as it leaves.
+  useLayoutEffect(() => {
     const root = rootRef.current;
-    if (root) root.style.setProperty('--collapse', String(p));
-    if (canvasRef.current) canvasRef.current.setCollapse(p);
-  }, []);
-  useScrollProgress(panelRef, onProgress, !reduced);
-
-  useEffect(() => {
-    if (reduced && canvasRef.current) canvasRef.current.setCollapse(0);
+    if (!root || !hasJs() || reduced) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.to('.hero__inner', {
+        scale: 0.9,
+        y: -40,
+        autoAlpha: 0,
+        ease: 'none',
+        scrollTrigger: { trigger: root, start: 'top top', end: 'bottom top', scrub: 0.6 },
+      });
+    }, root);
+    return () => ctx.revert();
   }, [reduced]);
+
+  useLayoutEffect(() => {
+    const id = requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const nameWords = content.name.split(' ');
 
@@ -153,10 +147,12 @@ export default function Hero({ content, spectrum, resumeHref }) {
             })}
           </div>
         </div>
-      </div>
 
-      <div className="wrap hero__spectrum">
-        <SpectrumPanel canvasRef={canvasRef} figureRef={panelRef} mode="live" content={spectrum} isPhone={isPhone} />
+        <div className="hero__cue">
+          <Mono label dim>
+            {content.cue}
+          </Mono>
+        </div>
       </div>
     </section>
   );

@@ -21,8 +21,7 @@ if (import.meta.env.DEV) {
     import('./content/stack.js'),
     import('./content/education.js'),
     import('./content/contact.js'),
-    import('./content/spectrum.js'),
-  ]).then(([{ runCopyFit }, site, hero, now, work, projects, research, stack, education, contact, spectrum]) => {
+  ]).then(([{ runCopyFit }, site, hero, now, work, projects, research, stack, education, contact]) => {
     runCopyFit({
       site: site.default,
       hero: hero.default,
@@ -33,7 +32,6 @@ if (import.meta.env.DEV) {
       stack: stack.default,
       education: education.default,
       contact: contact.default,
-      spectrum: spectrum.default,
     });
   });
 }

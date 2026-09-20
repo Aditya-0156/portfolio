@@ -11,7 +11,6 @@
   .research__rule { margin: var(--s-6) 0 var(--s-6); }
   .research__title { max-width: 26ch; }
   .research__p { margin-top: var(--s-4); color: var(--fg-1); }
-  .research__figure { margin-top: var(--s-6); }
 
   .pubs { margin-top: var(--s-7); }
   .pubs__label { display: block; margin-bottom: var(--s-4); }

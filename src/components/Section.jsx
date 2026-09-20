@@ -3,6 +3,7 @@ import Rule from './Rule.jsx';
 import Mono from './Mono.jsx';
 import { useActiveSection } from '../hooks/useActiveSection.js';
 import { useReveal } from '../hooks/useReveal.js';
+import { useSectionCamera } from '../hooks/useSectionCamera.js';
 
 /**
  * A ruled section with the sticky mono rail: index label, h2 title, up to three meta lines.
@@ -14,6 +15,7 @@ export default function Section({ id, index, title, meta = [], children, classNa
   const active = useActiveSection() === id;
   const titleId = `${id}-title`;
   useReveal(ref);
+  useSectionCamera(ref);
   return (
     <section
       id={id}

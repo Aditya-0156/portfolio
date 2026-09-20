@@ -1,12 +1,12 @@
-// The "Now" block. Shape from DESIGN_SPEC section 8.1 (now.js). Prose and stack from COPY.json now.
-// meta[1] is rendered by the builder as <time datetime="2026-06">.
+// The "Now" block: what Aditya is interested in and where that interest currently sits. It names
+// the role and the project but leaves the detail of both to work.js and projects.js.
 export default {
   index: '02',
   title: 'Now',
   meta: ['Cornerstone OnDemand', 'Since June 2026'],
   paragraphs: [
-    "I work on Skills Architect inside Cornerstone Workforce AI, the enterprise intelligence platform Cornerstone launched in May 2026. By Cornerstone's own count it serves roughly 7,000 organizations and more than 140 million users.",
-    "My work sits in the platform's agentic AI layer: the Skills Architect Agent and the services it runs on, inside a multi-tenant, security-constrained stack.",
+    'The part of this field I find most interesting is the join: what it takes to put a model inside software that people already depend on. Access to the right data, limits it cannot talk its way past, and a sensible answer when it is wrong.',
+    'That is what I spend my time on. At work I am a Forward Deployment Engineer at Cornerstone OnDemand, on the agentic AI layer of an enterprise platform. Outside work I built AAItrade, where a language model trades inside risk rules it does not control.',
   ],
-  stack: ['Java', 'Spring Boot', 'React', 'TypeScript', 'PostgreSQL', 'MongoDB', 'ClickHouse', 'Redis'],
+  stack: ['Machine learning', 'LLM agents and tool use', 'Backend services', 'Data plumbing'],
 }

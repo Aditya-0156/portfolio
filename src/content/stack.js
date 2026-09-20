@@ -1,49 +1,24 @@
-// Stack. Shape from DESIGN_SPEC section 8.1 (stack.js). Values from COPY.json stack.
-// Plain grouped lists: no percentages, no bars. Items are plain strings here; the shape also
-// allows { name, sub: [string] } for sub-items, unused for now.
+// Stack. Deliberately short and honestly graded. The groups are about how much of it Aditya
+// actually carries, not everything he has ever imported. The last group is set as one quiet
+// wrapped line on purpose: it is the least of it, and it should look like the least of it.
 export default {
   title: 'Stack',
-  note: 'Grouped by how often I use each one.',
+  note: 'Graded by how much of it I actually carry, not by everything I have imported once.',
   groups: [
     {
-      label: 'Daily',
-      items: [
-        'Java',
-        'Spring Boot',
-        'React',
-        'TypeScript',
-        'PostgreSQL',
-        'MongoDB',
-        'ClickHouse',
-        'Redis',
-        'LLM agents and tool use',
-      ],
+      label: 'Every day',
+      layout: 'list',
+      items: ['Java', 'Spring Boot', 'React', 'TypeScript', 'PostgreSQL'],
     },
     {
-      label: 'Strong',
-      items: [
-        'Python',
-        'scikit-learn',
-        'TensorFlow/Keras',
-        'pandas',
-        'NumPy',
-        'Claude API',
-        'Azure OpenAI',
-        'LangChain',
-        'ChromaDB',
-        'RAG',
-        'Flask',
-        'FastAPI',
-        'SQL',
-        'SQLite',
-        'Git',
-        'Linux',
-        'CI/CD',
-      ],
+      label: 'Comfortable',
+      layout: 'list',
+      items: ['Python', 'LLM APIs and tool use', 'FastAPI', 'Flask', 'SQL', 'Git', 'Linux'],
     },
     {
-      label: 'Used before',
-      items: ['C/C++', 'PyTorch', 'Hugging Face', 'Docker', 'JavaFX'],
+      label: 'Have shipped something with, no more than that',
+      layout: 'inline',
+      items: ['scikit-learn', 'TensorFlow', 'pandas', 'NumPy', 'LangChain', 'ChromaDB', 'MongoDB', 'Redis', 'ClickHouse', 'Docker', 'C/C++', 'JavaFX'],
     },
   ],
 }

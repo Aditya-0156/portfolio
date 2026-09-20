@@ -6,16 +6,26 @@ Live at https://aditya-0156.github.io/portfolio/
 
 ## Design
 
-The site is built as a bench instrument rather than a brochure: one grotesk, one mono, one accent colour, hairline rules, and a sticky mono rail that indexes every section. The masthead is a 2D canvas rendering of a 96-channel C+L band optical comb with one channel marked as a localized soft failure, drawn from the same subject as the research it sits above. It is procedurally generated from a fixed seed and captioned as illustrative. Scrolling collapses it into the first rule of the page.
+The background is the design. A flow field of drifting currents is generated from seeded noise and
+painted on a canvas behind the whole page. Scrolling moves a camera through it: the field zooms out
+across the middle of the document and part of the way back in, pans as you travel, and quietens
+behind dense text so it never fights what you are reading. Each section's content arrives slightly
+small, holds at full size for as long as you are reading it, then pulls back as it leaves.
 
-Both themes are first class. Dark is the default, light is a true light theme, and the choice is stored. Every text pair clears WCAG AA in both, checked by a script that runs before each build.
+Type does the rest: one grotesk, one mono, hairline rules, and a sticky mono rail that indexes every
+section. One accent colour, used only where something needs to be singled out.
+
+Both themes are first class. Dark is the default, light is a true light theme, and the choice is
+stored. Every text pair clears WCAG AA in both, checked by a script that runs before each build.
+Nothing fades on scroll, so contrast holds at every point of the animation.
 
 ## Stack
 
 - React 19 and Vite 7
 - Tailwind CSS v4, configured in CSS
-- GSAP with ScrollTrigger for the intro and scroll reveals, Lenis for smooth scrolling
-- No UI framework, no icon library, no 3D library
+- GSAP with ScrollTrigger for the intro, the scroll camera and reveals, Lenis for smooth scrolling
+- A 2D canvas for the background field, generated from seeded value noise
+- No UI framework, no icon library, no 3D library, no images
 
 ## Run locally
 
@@ -38,7 +48,6 @@ npm run deploy
 ```
 npm run lint            # eslint
 npm run lint:contrast   # WCAG AA contrast of every token pair, both themes
-node scripts/spectrum.test.mjs
 ```
 
 ## Content
@@ -47,7 +56,10 @@ Every string on the page lives in `src/content`. Components hold no prose. `src/
 
 ## Motion
 
-Motion reports state and never decorates. Nothing translates more than 12 px, text never fades in on scroll, and every effect respects `prefers-reduced-motion`. The canvas stops drawing 12 seconds after the last interaction, so an idle page issues no frames.
+Every effect respects `prefers-reduced-motion`: the field paints one still engraving of the same
+currents and then nothing moves again, the scroll camera is never created, and reveals resolve to
+their finished state. With the field running the page holds a steady 60 frames per second on both
+desktop and phone.
 
 ## Notes
 

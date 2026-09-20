@@ -29,7 +29,8 @@ export default {
   'hero.company': { max: 24 },
   'hero.location': { max: 20 },
   'hero.roleLine': { max: 72, composed: true, note: 'One line at 22 px desktop, two at 18 px phone' },
-  'hero.statement': { min: 120, max: 220, note: 'One or two sentences; three to five lines at 18 px on phone' },
+  'hero.statement': { min: 120, max: 230, note: 'One or two sentences; three to five lines at 18 px on phone' },
+  'hero.cue': { max: 14, note: 'Sits on the fold with a rule beside it' },
   'hero.ctas': { count: { max: 5 } },
   'hero.ctas[kind=primary].label': { max: 12, note: 'Two half-width phone buttons' },
   'hero.ctas[kind=secondary].label': { max: 12, note: 'Two half-width phone buttons' },
@@ -94,12 +95,7 @@ export default {
   // publication.title and publication.authors: exact from CONTEXT, no limit, no truncation.
 
   // stack
-  'stack.groups': { count: { min: 3, max: 3 }, note: 'Three columns' },
-  'stack.groups[].label': { max: 12 },
-  'stack.groups[].items': { count: { max: 16 } },
-  'stack.groups[].items[]': { max: 28, note: 'For object items the limit applies to `name`' },
-  'stack.groups[].items[].sub': { count: { max: 4 } },
-  'stack.groups[].items[].sub[]': { max: 24 },
+  'stack.groups': { count: { max: 3 } },
   'stack.note': { max: 110, note: 'Optional' },
 
   // education
@@ -113,11 +109,4 @@ export default {
   'contact.links': { count: { max: 5 }, note: 'One row desktop, two per row phone' },
   'contact.links[].label': { max: 14 },
 
-  // spectrum
-  'spectrum.captionLeft': { max: 30, note: 'Shares the caption row with CH 61 LOCALIZED' },
-  'spectrum.captionLeftShort': { max: 20 },
-  'spectrum.faultLabel': { max: 10, words: 1, note: 'The accent word' },
-  'spectrum.figureCaption': { max: 44, note: 'Research figure' },
-  'spectrum.figureCaptionShort': { max: 24 },
-  'spectrum.ariaLabel': { min: 120, max: 200, note: 'Must say illustrative' },
 }
