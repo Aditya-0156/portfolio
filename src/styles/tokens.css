@@ -22,6 +22,14 @@
   --grid: #1B1D21;
   --selection-bg: #ECEDEE;
   --selection-fg: #0B0C0E;
+  /* The forge: white hot at the heart of the blast, cooling outward to the text's own colour. */
+  --forge-0: #FFF8EC;
+  --forge-1: #FFDCA8;
+  --forge-2: #FFAB72;
+  --forge-3: #FF8259;
+  /* How hard the world is held down behind the reading column. */
+  --scrim-near: rgba(11, 12, 14, 0.92);
+  --scrim-mid: rgba(11, 12, 14, 0.66);
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -45,4 +53,10 @@
   --grid: #E9E9E6;
   --selection-bg: #141517;
   --selection-fg: #F7F7F5;
+  --forge-0: #5E2E0C;
+  --forge-1: #834015;
+  --forge-2: #A83A11;
+  --forge-3: #C9270B;
+  --scrim-near: rgba(247, 247, 245, 0.94);
+  --scrim-mid: rgba(247, 247, 245, 0.72);
 }

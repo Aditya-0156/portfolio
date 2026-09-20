@@ -10,7 +10,7 @@ import Stack from './components/Stack.jsx';
 import Education from './components/Education.jsx';
 import Contact from './components/Contact.jsx';
 import Footer from './components/Footer.jsx';
-import FlowField from './components/Background/FlowField.jsx';
+import Voyage from './components/Voyage/Voyage.jsx';
 import { ActiveSectionContext, useActiveSectionObserver } from './hooks/useActiveSection.js';
 import { useMotionPrefs } from './hooks/useMotionPrefs.js';
 import { useLenis } from './hooks/useLenis.js';
@@ -38,7 +38,7 @@ const INDEX_LABELS = {
 };
 
 export default function App() {
-  const { reduced } = useMotionPrefs();
+  const { reduced, isPhone } = useMotionPrefs();
   useLenis(!reduced);
   const active = useActiveSectionObserver(SECTION_IDS);
   const resumeHref = `${import.meta.env.BASE_URL}${contact.resume.file}`;
@@ -55,7 +55,7 @@ export default function App() {
 
   return (
     <ActiveSectionContext.Provider value={active}>
-      <FlowField />
+      <Voyage reduced={reduced} isPhone={isPhone} />
       <SkipLink targetId="content" label={site.nav.skipLabel} />
       <Nav content={site} indexLabels={INDEX_LABELS} extraLinks={extraLinks} />
       <main id="content">
