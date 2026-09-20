@@ -1,559 +1,482 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { buildProbe } from '../../lib/probe.js';
-import {
-  lerp, clamp01, smooth, band, peak, glowTexture, ringTexture, sprite, points,
-  starfield, debrisShell, accretionDisk, spiralGalaxy, jet, gasGiant,
-} from '../../lib/space.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { buildWorld } from '../../lib/voyage/world.js';
+import { clamp01, band } from '../../lib/space.js';
+import { scrollToHash } from '../../lib/motion.js';
+import { voyage } from '../../content/voyage.js';
 import { useNova } from '../../hooks/useNova.js';
 import { useRipple } from '../../hooks/useRipple.js';
-import './voyage.css';
 
-// The road. Eight sections of the page, eight stations along it, so the camera arrives where
-// the reader does: launch, a gas giant, the supernova, its remnant, the merger, a quasar, the
-// cluster, and the deep field at the end.
-const Z0 = 180;
-const Z1 = -4250;
-const zAt = (t) => lerp(Z0, Z1, t);
-
-// The eight sections of the page, in the order they are travelled.
-const SECTION_IDS = ['top', 'now', 'work', 'projects', 'research', 'stack', 'education', 'contact'];
-
-/**
- * Sections are not the same height, so raw scroll does not arrive at station three when the
- * reader arrives at the third section. This measures where each section actually starts and
- * builds a piecewise map from real scroll to station space, so every set piece fires exactly
- * when its section comes up. Remeasured whenever the layout can have changed.
- */
-function measureStations() {
-  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const anchors = SECTION_IDS.map((id, i) => {
-    if (i === 0) return 0;
-    const el = document.getElementById(id);
-    if (!el) return i / (SECTION_IDS.length - 1);
-    return clamp01((el.getBoundingClientRect().top + window.scrollY - 72) / max);
-  });
-  // Keep it monotonic, and pin the last station to the end of the page.
-  for (let i = 1; i < anchors.length; i++) anchors[i] = Math.max(anchors[i], anchors[i - 1] + 0.001);
-  anchors[anchors.length - 1] = 1;
-  return anchors;
-}
-
-/** Raw scroll 0..1 to station space 0..1, where station i sits exactly at i / (n - 1). */
-function toStationSpace(raw, anchors) {
-  const n = anchors.length - 1;
-  if (raw <= anchors[0]) return 0;
-  for (let i = 0; i < n; i++) {
-    if (raw <= anchors[i + 1]) {
-      const span = anchors[i + 1] - anchors[i] || 1;
-      return (i + (raw - anchors[i]) / span) / n;
-    }
-  }
-  return 1;
-}
-
-// The set pieces, placed just past the station that reads them.
-const P_GIANT = new THREE.Vector3(-250, -40, -520);
-const P_NOVA = new THREE.Vector3(52, 18, -1130);
-const P_REMNANT = new THREE.Vector3(-52, 12, -1775);
-const P_MERGER = new THREE.Vector3(-62, -12, -2400);
-const P_QUASAR = new THREE.Vector3(104, 32, -3040);
-
-// The probe's flight plan, one entry per station. `side` and `lift` are fractions of the visible
-// frame, so the staging holds on a phone as well as a wide screen. `lead` is how far ahead of the
-// camera it rides, and it swings between near and far so the craft genuinely travels in depth
-// rather than sitting at a fixed offset. `watch` is what it turns to face on that leg.
-const FLIGHT = [
-  { side: 0.50, lift: -0.02, lead: 110, watch: null },
-  { side: -0.30, lift: 0.18, lead: 195, watch: 'giant' },
-  { side: 0.46, lift: -0.14, lead: 140, watch: 'nova' },
-  { side: -0.34, lift: 0.22, lead: 235, watch: 'remnant' },
-  { side: 0.42, lift: -0.06, lead: 150, watch: 'merger' },
-  { side: -0.38, lift: 0.16, lead: 205, watch: 'quasar' },
-  { side: 0.30, lift: 0.26, lead: 265, watch: null },
-  { side: -0.18, lift: 0.34, lead: 330, watch: null },
+const FORGE =
+  'h1, h2, h3, h4, p, li, figcaption, .t-mono, .t-mono-label, .readout__value, .facts__value';
+const RIPPLE =
+  '.entry, .card, .pub, .readout, .flagship, .stack__group, .more__item, .facts__cell';
+const CAMERA = [
+  [0, 35, 550],
+  [55, 60, 210],
+  [-40, 15, -470],
+  [30, -25, -1170],
+  [-35, 45, -1800],
+  [20, -20, -2440],
+  [-35, 65, -3130],
+  [80, 15, -3650],
 ];
 
-/**
- * The voyage. A fixed canvas behind the whole page: the probe leaves at the top, and the reader
- * travels with it past a gas giant, a supernova, the remnant it leaves, a black hole merger, a
- * quasar and a cluster of galaxies. Two of those set pieces do not stay inside the canvas: the
- * blast forges the colour of the text it passes, and the merger ripples the layout.
- */
-// What the blast paints and what the wave moves. Text leaves for the forge, because the gradient
-// is clipped to glyphs; structural blocks for the ripple, because the reveal animations already
-// own the transforms on the text inside them.
-const FORGE_TARGETS = [
-  'h1', 'h2', 'h3', 'h4', 'p', 'li', 'figcaption',
-  '.t-mono', '.t-mono-label', '.readout__value', '.facts__value', '.copy-email__address',
-].join(', ');
-const RIPPLE_TARGETS = [
-  '.entry', '.card', '.pub', '.readout', '.flagship', '.stack__group',
-  '.more__item', '.arch__step', '.facts__cell', '.copy-email',
-].join(', ');
-
 export default function Voyage({ reduced, isPhone }) {
-  const canvasRef = useRef(null);
-  const nova = useNova(!reduced, FORGE_TARGETS);
-  const ripple = useRipple(!reduced, RIPPLE_TARGETS);
+  const canvasRef = useRef(null),
+    progressRef = useRef(null),
+    toggleRef = useRef(null);
+  const [cinema, setCinema] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [available, setAvailable] = useState(true);
+  const [chapter, setChapter] = useState(0);
+  const playback = useRef({ paused: false, cinema: false });
+  const engine = useRef({ wake: () => {} });
+  const nova = useNova(!reduced && !paused, FORGE);
+  const ripple = useRipple(!reduced && !paused, RIPPLE);
+
+  useEffect(() => {
+    playback.current = { paused, cinema };
+    engine.current.wake();
+  }, [paused, cinema]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('voyage-cinema', cinema);
+    const regions = [
+      ...document.querySelectorAll('main, .nav, .footer-wrap, .skip'),
+    ];
+    regions.forEach((el) => {
+      el.inert = cinema;
+    });
+    const escape = (e) => {
+      if (e.key === 'Escape' && cinema) {
+        setCinema(false);
+        toggleRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', escape);
+    return () => {
+      document.documentElement.classList.remove('voyage-cinema');
+      regions.forEach((el) => {
+        el.inert = false;
+      });
+      window.removeEventListener('keydown', escape);
+    };
+  }, [cinema]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    const engineApi = engine.current;
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: !isPhone, alpha: false, powerPreference: 'high-performance' });
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: false,
+        powerPreference: 'high-performance',
+      });
     } catch {
-      return undefined; // No WebGL: the page keeps its flat background and reads normally.
+      const id = requestAnimationFrame(() => setAvailable(false));
+      return () => cancelAnimationFrame(id);
     }
-    const DPR = Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
-    renderer.setPixelRatio(DPR);
-    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
-
+    renderer.toneMappingExposure = 1.18;
+    renderer.setClearColor(0x03060c);
     const scene = new THREE.Scene();
-    // Fog resolves to black so additive particles genuinely vanish with distance, which is what
-    // makes each station arrive out of the dark instead of sitting there waiting.
-    scene.fog = new THREE.Fog(0x000000, 320, 1250);
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.5, 9000);
-
-    const SMALL = isPhone;
-    const N = (full, phone) => (SMALL ? phone : full);
-
-    // Dark is a cosmos of light on black. Light is the same voyage drawn as ink on paper: the
-    // particle clouds stop adding light and start laying down pigment, and the glows, which only
-    // exist to brighten a dark sky, stand down. Collected here so the swap is one pass.
-    const cloudMats = [];
-    const glowSprites = [];
-    const INK = new THREE.Color(0x141517);
-
-    const TEX = {
-      white: glowTexture([[0, 'rgba(255,255,255,1)'], [0.24, 'rgba(206,224,255,0.5)'], [1, 'rgba(0,0,0,0)']]),
-      hot: glowTexture([[0, 'rgba(255,253,248,1)'], [0.18, 'rgba(255,206,150,0.8)'], [0.48, 'rgba(255,104,52,0.26)'], [1, 'rgba(0,0,0,0)']]),
-      ember: glowTexture([[0, 'rgba(255,176,116,0.95)'], [0.33, 'rgba(255,92,54,0.32)'], [1, 'rgba(0,0,0,0)']]),
-      blue: glowTexture([[0, 'rgba(240,248,255,1)'], [0.28, 'rgba(126,186,255,0.48)'], [1, 'rgba(0,0,0,0)']]),
-      ringHot: ringTexture('rgba(255,216,180,0.95)'),
-      ringCold: ringTexture('rgba(158,204,255,0.9)'),
-      ringThin: ringTexture('rgba(255,238,210,0.95)', 0.026),
-    };
-
-    // ── Sky ───────────────────────────────────────────────────────────────
-    const sky = starfield(N(8000, 2600), 3000, 2.1, 0.85);
-    scene.add(sky);
-    const nearDust = points(N(1600, 500), (i, o) => {
-      o.p = [(Math.random() - 0.5) * 700, (Math.random() - 0.5) * 460, -Math.random() * 2200];
-      const w = 0.4 + Math.random() * 0.4;
-      o.c = [w * 0.82, w * 0.88, w];
-    }, { size: 1.2, opacity: 0.45, fog: false });
-    scene.add(nearDust);
-
-    const ambient = new THREE.AmbientLight(0x9fb2cc, 0.42);
-    scene.add(ambient);
-    const homeStar = new THREE.PointLight(0xfff1dc, 7, 0, 1.3);
-    homeStar.position.set(140, 80, 340);
-    scene.add(homeStar);
-    const blastLight = new THREE.PointLight(0xffb478, 0, 0, 1.7);
-    blastLight.position.copy(P_NOVA);
-    scene.add(blastLight);
-    const mergerLight = new THREE.PointLight(0xaed4ff, 0, 0, 1.7);
-    mergerLight.position.copy(P_MERGER);
-    scene.add(mergerLight);
-
-    // ── The probe ─────────────────────────────────────────────────────────
-    const { group: probe } = buildProbe();
-    probe.scale.setScalar(SMALL ? 0.5 : 0.62);
-    scene.add(probe);
-    // A key and a rim that travel with the craft, so it always reads as a lit machine.
-    const probeKey = new THREE.PointLight(0xfff0dc, 520, 260, 1.4);
-    probeKey.position.set(40, 34, 46);
-    probe.add(probeKey);
-    const probeRim = new THREE.PointLight(0x9cc6ff, 380, 230, 1.5);
-    probeRim.position.set(-46, -12, -40);
-    probe.add(probeRim);
-    const probeGlint = sprite(TEX.white, 7, 0.4);
-    probeGlint.position.set(0, 2, 0);
-    probe.add(probeGlint);
-
-    // ── 02 · Gas giant ────────────────────────────────────────────────────
-    const giant = gasGiant(132);
-    giant.group.position.copy(P_GIANT);
-    scene.add(giant.group);
-    const giantKey = new THREE.DirectionalLight(0xfff0dc, 4.4);
-    giantKey.position.set(300, 120, 260);
-    giant.group.add(giantKey);
-    const giantRim = new THREE.DirectionalLight(0x74a0ff, 1.0);
-    giantRim.position.set(-220, -60, -180);
-    giant.group.add(giantRim);
-
-    // ── 03 · Supernova ────────────────────────────────────────────────────
-    const progenitor = new THREE.Mesh(
-      new THREE.SphereGeometry(26, 48, 48),
-      new THREE.MeshBasicMaterial({ color: 0xff8f5c }),
+    const camera = new THREE.PerspectiveCamera(
+      isPhone ? 62 : 48,
+      1,
+      0.5,
+      11000,
     );
-    progenitor.position.copy(P_NOVA);
-    scene.add(progenitor);
-    const progenitorGlow = sprite(TEX.ember, 210, 0.9);
-    progenitorGlow.position.copy(P_NOVA);
-    scene.add(progenitorGlow);
-
-    const flash = sprite(TEX.hot, 10, 0, false); flash.position.copy(P_NOVA); scene.add(flash);
-    const core = sprite(TEX.white, 10, 0, false); core.position.copy(P_NOVA); scene.add(core);
-    const shockA = sprite(TEX.ringHot, 10, 0); shockA.position.copy(P_NOVA); scene.add(shockA);
-    const shockB = sprite(TEX.ringCold, 10, 0); shockB.position.copy(P_NOVA); scene.add(shockB);
-    const blast = debrisShell(N(16000, 5000), { reach: 1150, sizeScale: SMALL ? 1.4 : 1.15 });
-    blast.mesh.position.copy(P_NOVA);
-    scene.add(blast.mesh);
-
-    // ── 04 · The remnant ──────────────────────────────────────────────────
-    const remnant = points(N(9000, 3000), (i, o) => {
-      const a = Math.random() * Math.PI * 2;
-      const ph = Math.acos(2 * Math.random() - 1);
-      const r = 150 + Math.pow(Math.random(), 0.38) * 230;
-      // Filaments: the shell is not smooth, it is torn into strands.
-      const fil = 1 + Math.sin(a * 8 + ph * 6) * 0.18 + Math.sin(ph * 11) * 0.08;
-      o.p = [Math.sin(ph) * Math.cos(a) * r * fil, Math.cos(ph) * r * 0.66 * fil, Math.sin(ph) * Math.sin(a) * r * fil];
-      const m = Math.random();
-      o.c = [lerp(1, 0.42, m), lerp(0.46, 0.66, m), lerp(0.28, 1, m)];
-    }, { size: 2.1, opacity: 0 });
-    remnant.position.copy(P_REMNANT);
-    scene.add(remnant);
-    const neutronStar = sprite(TEX.blue, 34, 0); neutronStar.position.copy(P_REMNANT); scene.add(neutronStar);
-    const remnantGlow = sprite(TEX.ember, 520, 0); remnantGlow.position.copy(P_REMNANT); scene.add(remnantGlow);
-
-    // ── 05 · Black hole merger ────────────────────────────────────────────
-    const binary = new THREE.Group();
-    binary.position.copy(P_MERGER);
-    binary.rotation.y = 0.5;
-    scene.add(binary);
-    function blackHole(radius, diskSeed) {
-      const g = new THREE.Group();
-      g.add(new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 48), new THREE.MeshBasicMaterial({ color: 0x000000 })));
-      const photon = sprite(TEX.ringThin, radius * 7.4, 0.95);
-      g.add(photon);
-      const disk = accretionDisk(N(6000, 2200), radius * 2, radius * 8, [1, 0.6, 0.34], diskSeed);
-      disk.mesh.rotation.x = 0.34;
-      g.add(disk.mesh);
-      return { g, disk, photon };
-    }
-    const bhA = blackHole(13, 23);
-    const bhB = blackHole(10.5, 29);
-    binary.add(bhA.g, bhB.g);
-    const kilonova = debrisShell(N(10000, 3200), { reach: 900, sizeScale: SMALL ? 1.2 : 1, hot: [0.92, 0.98, 1], cool: [0.62, 0.36, 1], seed: 17 });
-    kilonova.mesh.position.copy(P_MERGER);
-    scene.add(kilonova.mesh);
-    const mergeFlash = sprite(TEX.blue, 10, 0, false); mergeFlash.position.copy(P_MERGER); scene.add(mergeFlash);
-    // Three rings leaving together: what the page ripple is a picture of.
-    const waves = [0, 1, 2].map(() => {
-      const s = sprite(TEX.ringCold, 10, 0);
-      s.position.copy(P_MERGER);
-      scene.add(s);
-      return s;
-    });
-
-    // ── 06 · Quasar ───────────────────────────────────────────────────────
-    const quasar = new THREE.Group();
-    quasar.position.copy(P_QUASAR);
-    quasar.rotation.z = 0.34;
-    scene.add(quasar);
-    quasar.add(new THREE.Mesh(new THREE.SphereGeometry(15, 48, 48), new THREE.MeshBasicMaterial({ color: 0x000000 })));
-    const qDisk = accretionDisk(N(8000, 2600), 27, 128, [1, 0.74, 0.46], 37);
-    qDisk.mesh.rotation.x = 0.16;
-    quasar.add(qDisk.mesh);
-    quasar.add(sprite(TEX.ringThin, 112, 0.9));
-    const jetUp = jet(N(4000, 1400), 620, 34);
-    const jetDown = jet(N(4000, 1400), 620, 34, 43);
-    jetDown.rotation.z = Math.PI;
-    quasar.add(jetUp, jetDown);
-    const qCore = sprite(TEX.blue, 160, 0.75);
-    quasar.add(qCore);
-
-    // ── 07 · The cluster ──────────────────────────────────────────────────
-    const cluster = new THREE.Group();
-    scene.add(cluster);
-    [
-      [-420, 120, -3640, 190, 0.5, 2],
-      [330, -160, -3860, 240, -0.8, 2],
-      [-120, 210, -4060, 160, 1.2, 3],
-      [500, 90, -4260, 260, 0.3, 2],
-      [-560, -80, -4460, 200, -0.4, 2],
-    ].forEach(([x, y, z, r, tilt, arms], i) => {
-      const gal = spiralGalaxy(N(5200, 1800), r, arms, 31 + i * 7);
-      gal.position.set(x, y, z);
-      gal.rotation.set(tilt, i * 1.3, tilt * 0.4);
-      cluster.add(gal);
-      const coreGlow = sprite(TEX.white, r * 0.42, 0.5);
-      coreGlow.position.set(x, y, z);
-      cluster.add(coreGlow);
-    });
-
-    // Collected once the whole scene exists, then repainted whenever the theme changes.
-    scene.traverse((o) => {
-      if (o.isPoints) cloudMats.push({ mat: o.material, base: o.material.opacity });
-      else if (o.isSprite && o !== probeGlint) glowSprites.push({ s: o, base: o.material.opacity });
-    });
-
-    let isLight = document.documentElement.dataset.theme === 'light';
-    const paintTheme = () => {
-      isLight = document.documentElement.dataset.theme === 'light';
-      const ground = isLight ? 0xf7f7f5 : 0x000000;
-      renderer.setClearColor(isLight ? 0xf7f7f5 : 0x05060a, 1);
-      scene.fog.color.setHex(ground);
-      cloudMats.forEach(({ mat }) => {
-        mat.blending = isLight ? THREE.NormalBlending : THREE.AdditiveBlending;
-        mat.vertexColors = !isLight;
-        if (isLight) mat.color.copy(INK);
-        else mat.color.setHex(0xffffff);
-        mat.needsUpdate = true;
-      });
-      // The glows exist to brighten a dark sky. On paper they would only wash it out.
-      glowSprites.forEach(({ s: sp }) => { sp.userData.muted = isLight; });
-      ambient.intensity = isLight ? 1.15 : 0.42;
-      homeStar.intensity = isLight ? 3 : 7;
+    const world = buildWorld(scene, isPhone);
+    const path = new THREE.CatmullRomCurve3(
+      CAMERA.map((p) => new THREE.Vector3(...p)),
+      false,
+      'catmullrom',
+      0.32,
+    );
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.24, 0.35, 0.9);
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+    const state = {
+      raf: 0,
+      last: 0,
+      time: 0,
+      t: 0,
+      target: 0,
+      anchors: [],
+      width: 1,
+      height: 1,
+      chapter: -1,
+      dirty: true,
+      lost: false,
+      frames: 0,
+      totalMs: 0,
+      dpr: Math.min(devicePixelRatio || 1, isPhone ? 1.25 : 1.5),
     };
-    window.addEventListener('theme:change', paintTheme);
-    paintTheme();
+    const pointer = new THREE.Vector2(),
+      pointerNow = new THREE.Vector2(),
+      zeroPointer = new THREE.Vector2();
+    const look = new THREE.Vector3(),
+      projected = new THREE.Vector3(),
+      probeTarget = new THREE.Vector3();
+    const probeQuaternion = new THREE.Quaternion(),
+      probeEuler = new THREE.Euler();
 
-    // ── Scroll ────────────────────────────────────────────────────────────
-    const st = { t: 0, target: 0, raf: 0, w: 0, h: 0, anchors: measureStations() };
     const readScroll = () => {
-      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      st.target = toStationSpace(clamp01(window.scrollY / max), st.anchors);
+      const y = window.scrollY;
+      let leg = 0;
+      for (let i = 0; i < state.anchors.length - 1; i++)
+        if (y >= state.anchors[i]) leg = i;
+      const a = state.anchors[leg] || 0,
+        b = state.anchors[leg + 1] || 1;
+      state.target = clamp01((leg + clamp01((y - a) / Math.max(1, b - a))) / 7);
+      state.dirty = true;
+      if (!state.raf && !document.hidden && !state.lost)
+        state.raf = requestAnimationFrame(draw);
     };
-    const remeasure = () => { st.anchors = measureStations(); readScroll(); };
-    readScroll();
-    st.t = st.target;
-    window.addEventListener('scroll', readScroll, { passive: true });
-    // The page grows as fonts land and sections reveal, so the map is rebuilt as that settles.
-    const ro = new ResizeObserver(remeasure);
-    ro.observe(document.documentElement);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
-
-    const resize = () => {
-      st.w = window.innerWidth;
-      st.h = window.innerHeight;
-      st.anchors = measureStations();
-      camera.aspect = st.w / st.h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(st.w, st.h);
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    // Project a world point to viewport pixels, for the effects that leave the canvas.
-    const proj = new THREE.Vector3();
-    const toScreen = (v) => {
-      proj.copy(v).project(camera);
-      return { x: (proj.x * 0.5 + 0.5) * st.w, y: (-proj.y * 0.5 + 0.5) * st.h, z: proj.z };
-    };
-    // World units to viewport pixels at a given depth, so the DOM front matches the 3D front.
-    const pxPerUnit = (worldPos) => {
-      const dist = camera.position.distanceTo(worldPos);
-      return st.h / (2 * Math.tan((camera.fov * Math.PI) / 360) * Math.max(dist, 1));
-    };
-
-    const look = new THREE.Vector3();
-    const clock = new THREE.Clock();
-    // Scratch objects for aiming the probe, allocated once.
-    const probeAim = new THREE.Vector3();
-    const probeQuat = new THREE.Quaternion();
-    const probeBasis = new THREE.Matrix4();
-    const UP = new THREE.Vector3(0, 1, 0);
-    const TIP = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
-    const WATCH = { giant: P_GIANT, nova: P_NOVA, remnant: P_REMNANT, merger: P_MERGER, quasar: P_QUASAR };
-
-    // Sprite opacity is written all over the frame; this is the one gate that mutes them on paper.
-    const glow = (spr, value) => { spr.material.opacity = spr.userData.muted ? 0 : value; };
-
-    function frame() {
-      st.raf = requestAnimationFrame(frame);
-      if (document.hidden) return;
-      const time = clock.getElapsedTime();
-      st.t += (st.target - st.t) * 0.055;
-      const t = st.t;
-
-      // ── Flight ──
-      const camZ = zAt(t);
-      const sway = Math.sin(t * 8.4) * 30;
-      camera.position.set(sway, 16 + Math.sin(t * 5.6) * 14, camZ);
-      look.set(sway * 0.35, 6, camZ - 320);
-      camera.lookAt(look);
-      camera.rotation.z = Math.sin(t * 4.8) * 0.028;
-
-      // The probe is flown, not parked. Between stations it crosses the frame and changes its
-      // distance, and it turns to put its dish on whatever is out there on that leg.
-      const fi0 = clamp01(t) * (FLIGHT.length - 1);
-      const fa = Math.min(FLIGHT.length - 2, Math.floor(fi0));
-      const fm = smooth(clamp01(fi0 - fa));
-      const legA = FLIGHT[fa];
-      const legB = FLIGHT[fa + 1];
-      const lead = lerp(legA.lead, legB.lead, fm);
-      const halfH = lead * Math.tan((camera.fov * Math.PI) / 360);
-      const halfW = halfH * camera.aspect;
-      probe.position.set(
-        sway + lerp(legA.side, legB.side, fm) * halfW + Math.sin(time * 0.27) * 4,
-        6 + lerp(legA.lift, legB.lift, fm) * halfH + Math.sin(time * 0.35) * 3,
-        camZ - lead,
+    const measure = () => {
+      const max = Math.max(
+        1,
+        document.documentElement.scrollHeight - innerHeight,
       );
+      state.anchors = voyage.chapters.map((c, i) =>
+        i === 0
+          ? 0
+          : Math.min(
+              max,
+              Math.max(
+                0,
+                (document.getElementById(c.id)?.getBoundingClientRect().top ||
+                  0) +
+                  scrollY -
+                  72,
+              ),
+            ),
+      );
+      for (let i = 1; i < 8; i++)
+        state.anchors[i] = Math.max(state.anchors[i], state.anchors[i - 1] + 1);
+      readScroll();
+    };
+    const resize = () => {
+      state.width = innerWidth;
+      state.height = innerHeight;
+      renderer.setPixelRatio(state.dpr);
+      renderer.setSize(state.width, state.height);
+      composer.setPixelRatio(state.dpr);
+      composer.setSize(state.width, state.height);
+      world.stars.material.uniforms.uPixelRatio.value = state.dpr;
+      camera.aspect = state.width / state.height;
+      camera.updateProjectionMatrix();
+      measure();
+    };
+    const move = (e) => {
+      pointer.set(
+        (e.clientX / state.width - 0.5) * 2,
+        (e.clientY / state.height - 0.5) * 2,
+      );
+    };
+    const resetPointer = () => pointer.set(0, 0);
+    const observer = new ResizeObserver(measure);
+    observer.observe(document.documentElement);
+    window.addEventListener('resize', resize);
+    window.addEventListener('scroll', readScroll, { passive: true });
+    window.addEventListener('pointermove', move, { passive: true });
+    document.addEventListener('pointerleave', resetPointer);
+    let disposed = false;
+    document.fonts?.ready.then(() => {
+      if (!disposed) measure();
+    });
+    resize();
+    state.t = state.target;
 
-      // Aim mostly at the subject but keep some of the heading, so the craft is turned toward
-      // the event in three quarter view rather than presenting the dish flat to the camera.
-      const watch = fm < 0.5 ? legA.watch : legB.watch;
-      const subject = watch ? WATCH[watch] : null;
-      probeAim.set(probe.position.x * 1.35, probe.position.y - 16, probe.position.z - 360);
-      if (subject) probeAim.lerp(subject, 0.62);
-      probeBasis.lookAt(probe.position, probeAim, UP);
-      probeQuat.setFromRotationMatrix(probeBasis);
-      // The dish points along +Y in the model, so tip it onto the line of sight.
-      probeQuat.multiply(TIP);
-      // Eased rather than snapped, so a turn reads as the craft coming about.
-      probe.quaternion.slerp(probeQuat, 0.04);
-      probe.rotateZ(Math.sin(time * 0.16) * 0.004);
-      const probeFade = clamp01(1 - band(t, 0.80, 0.94));
-      probe.visible = probeFade > 0.02;
-      if (probe.visible) {
-        probeKey.intensity = 520 * probeFade;
-        probeRim.intensity = 380 * probeFade;
-        probeGlint.material.opacity = 0.4 * probeFade;
-      }
+    function draw(now) {
+      state.raf = 0;
+      if (disposed || document.hidden || state.lost) return;
+      const dt = Math.min((now - (state.last || now)) / 1000, 0.05);
+      state.last = now;
+      const still = reduced || playback.current.paused;
+      const travel = still
+        ? state.target
+        : state.t + (state.target - state.t) * (1 - Math.exp(-dt * 8));
+      state.t = travel;
+      if (!still) state.time += dt;
+      const time = state.time;
+      if (!still || state.dirty) {
+        state.dirty = false;
+        path.getPoint(travel, camera.position);
+        pointerNow.lerp(still ? zeroPointer : pointer, 1 - Math.exp(-dt * 2.5));
+        camera.position.x += pointerNow.x * 7;
+        camera.position.y -= pointerNow.y * 5;
+        // A restrained dolly and bank. Orientation changes continuously along the entire route.
+        look.set(
+          camera.position.x + 12 + Math.sin(travel * 9) * 16,
+          camera.position.y - 13,
+          camera.position.z - 600,
+        );
+        camera.lookAt(look);
+        camera.rotateZ(Math.sin(travel * 10) * 0.025);
+        camera.fov = (isPhone ? 62 : 48) + Math.sin(travel * Math.PI) * 3;
+        camera.updateProjectionMatrix();
+        world.sky.position.copy(camera.position);
+        world.sky.material.uniforms.uTravel.value = travel;
+        world.updateTime(time);
+        world.body.rotation.y = time * 0.012;
+        world.planet.visible = travel < 0.245;
+        world.body.material.uniforms.uOpacity.value =
+          1 - band(travel, 0.2, 0.245);
+        world.rings.material.uniforms.uOpacity.value =
+          1 - band(travel, 0.2, 0.245);
+        // The craft recedes, banks and crosses the viewing direction as the reader travels.
+        const lead = 140 + Math.sin(travel * 14) ** 2 * 120 + travel * 50;
+        const halfH = lead * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        const side = isPhone ? 0.5 : 0.65;
+        probeTarget.set(
+          camera.position.x +
+            halfH * camera.aspect * (side + Math.sin(travel * 17) * 0.18),
+          camera.position.y - halfH * (0.37 + Math.sin(travel * 12) * 0.19),
+          camera.position.z - lead,
+        );
+        world.probe.position.copy(probeTarget);
+        world.probe.position.y += Math.sin(time * 0.22) * 1.5;
+        probeEuler.set(
+          0.64 + Math.sin(travel * 8) * 0.3,
+          0.3 + travel * 1.5,
+          -0.55 + Math.sin(travel * 12) * 0.25,
+        );
+        probeQuaternion.setFromEuler(probeEuler);
+        world.probe.quaternion.copy(probeQuaternion);
+        world.probe.scale.setScalar(
+          (isPhone ? 0.38 : 0.65) * (1 - band(travel, 0.83, 1) * 0.75),
+        );
+        world.probe.visible = travel < 0.96;
 
-      // ── 02 · gas giant ──
-      giant.body.rotation.y = time * 0.045;
-      giant.bands.rotation.y = time * 0.045;
-      giant.ring.rotation.y = time * 0.016;
-
-      // ── 03 · supernova ──
-      const u = band(t, 0.235, 0.42);
-      const pre = clamp01(1 - band(t, 0.215, 0.255));
-      progenitor.visible = pre > 0.01;
-      progenitor.scale.setScalar(pre * (1 + Math.sin(time * 10) * 0.035));
-      glow(progenitorGlow, pre * 0.9);
-
-      const flashPeak = peak(u, 0.10, 0.13);
-      glow(flash, flashPeak);
-      flash.scale.setScalar(300 + u * 3600);
-      glow(core, clamp01(1 - u * 1.5) * 0.95);
-      core.scale.setScalar(70 + u * 420);
-      blast.advance(u);
-      blastLight.intensity = flashPeak * 5200 + clamp01(1 - u) * 320;
-
-      glow(shockA, u > 0 ? clamp01(u * 6) * clamp01((1 - u) * 1.9) * 0.9 : 0);
-      shockA.scale.setScalar(170 + Math.pow(u, 0.68) * 3300);
-      glow(shockB, u > 0.05 ? clamp01((u - 0.05) * 5) * clamp01((1 - u) * 1.6) * 0.5 : 0);
-      shockB.scale.setScalar(90 + Math.pow(u, 0.8) * 2400);
-
-      // The blast leaves the canvas: the front radius in pixels drives the forge gradient, so the
-      // colour crossing a headline is the same front that is crossing the sky behind it.
-      if (u > 0.001 && u < 0.999) {
-        const s = toScreen(P_NOVA);
-        const scale = pxPerUnit(P_NOVA);
-        nova.current.report({ active: true, x: s.x, y: s.y, radius: Math.pow(u, 0.6) * 1150 * scale * 0.92 });
-      } else {
-        nova.current.report({ active: false });
-      }
-
-      // ── 04 · the remnant ──
-      const rem = clamp01(band(t, 0.355, 0.415) - band(t, 0.50, 0.565));
-      remnant.material.opacity = rem * 0.92;
-      remnant.rotation.y = time * 0.014;
-      remnant.scale.setScalar(0.8 + band(t, 0.355, 0.565) * 0.4);
-      glow(remnantGlow, rem * 0.34);
-      glow(neutronStar, rem * (0.65 + Math.sin(time * 12) * 0.35));
-
-      // ── 05 · the merger ──
-      const inspiral = band(t, 0.475, 0.575);
-      const sep = lerp(130, 20, Math.pow(inspiral, 2));
-      const orbit = time * (0.5 + inspiral * 7) + inspiral * 30;
-      const merged = inspiral > 0.99;
-      bhA.g.position.set(Math.cos(orbit) * sep * 0.45, 0, Math.sin(orbit) * sep * 0.45);
-      bhB.g.position.set(-Math.cos(orbit) * sep * 0.55, 0, -Math.sin(orbit) * sep * 0.55);
-      bhB.g.visible = !merged;
-      const squeeze = lerp(1, 0.55, inspiral);
-      bhA.disk.spin(0.02 * (1 + inspiral * 4), squeeze);
-      bhB.disk.spin(0.02 * (1 + inspiral * 4), squeeze);
-      bhA.g.scale.setScalar(merged ? 1.35 : 1);
-      binary.rotation.y = 0.5 + time * 0.03;
-
-      const kn = band(t, 0.578, 0.655);
-      kilonova.advance(kn);
-      const knFlash = peak(kn, 0.08, 0.12);
-      glow(mergeFlash, knFlash);
-      mergeFlash.scale.setScalar(200 + kn * 2200);
-      mergerLight.intensity = knFlash * 3600;
-
-      // Three wave fronts, launched in sequence as the holes come together.
-      const waveDrive = clamp01(band(t, 0.50, 0.685));
-      waves.forEach((w, i) => {
-        const wu = clamp01(waveDrive * 3 - i * 0.55);
-        glow(w, wu > 0 && wu < 1 ? Math.sin(wu * Math.PI) * 0.55 : 0);
-        w.scale.setScalar(120 + Math.pow(wu, 0.7) * 2600);
-      });
-
-      // The merger leaves the canvas: the layout rings as the wave goes through it.
-      if (waveDrive > 0.001 && waveDrive < 0.999) {
-        const s = toScreen(P_MERGER);
-        const envelope = Math.sin(clamp01(waveDrive) * Math.PI);
-        ripple.current.report({
-          active: true,
-          x: s.x,
-          y: s.y,
-          amplitude: (SMALL ? 9 : 15) * envelope * (0.45 + inspiral * 0.55),
-          wavelength: 130,
-          phase: waveDrive * 26 + time * 3.4,
-        });
-      } else {
-        ripple.current.report({ active: false });
-      }
-
-      // ── 06 · quasar ──
-      qDisk.spin(0.022);
-      quasar.rotation.y = time * 0.05;
-      const jetPulse = 0.5 + Math.sin(time * 1.7) * 0.13;
-      jetUp.material.opacity = jetPulse;
-      jetDown.material.opacity = jetPulse;
-      glow(qCore, 0.68 + Math.sin(time * 3.3) * 0.16);
-
-      sky.rotation.y = time * 0.003;
-      nearDust.position.z = camZ * 0.6;
-      renderer.render(scene, camera);
-    }
-
-    // Reduced motion: one still frame of the launch, and nothing ever moves again.
-    if (reduced) {
-      st.t = 0;
-      camera.position.set(0, 16, Z0);
-      camera.lookAt(0, 6, Z0 - 320);
-      probe.position.set(70, 6, Z0 - 110);
-      probe.rotation.set(0.22, 0.75, 0.12);
-      blast.advance(0);
-      kilonova.advance(0);
-      remnant.material.opacity = 0;
-      renderer.render(scene, camera);
-    } else {
-      st.raf = requestAnimationFrame(frame);
-    }
-
-    return () => {
-      cancelAnimationFrame(st.raf);
-      window.removeEventListener('scroll', readScroll);
-      window.removeEventListener('theme:change', paintTheme);
-      ro.disconnect();
-      window.removeEventListener('resize', resize);
-      scene.traverse((o) => {
-        if (o.geometry) o.geometry.dispose();
-        if (o.material) {
-          const mats = Array.isArray(o.material) ? o.material : [o.material];
-          mats.forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); });
+        const eruption = band(travel, 0.24, 0.4);
+        world.nova.visible = travel > 0.15 && travel < 0.44;
+        if (world.nova.visible) {
+          world.blast.advance(eruption);
+          world.star.scale.setScalar(360 + Math.sin(eruption * Math.PI) * 700);
+          world.star.material.opacity = (1 - band(eruption, 0.25, 0.95)) * 0.95;
+          world.novaCloud.material.uniforms.uOpacity.value =
+            Math.sin(eruption * Math.PI) * 0.8;
+          world.novaCloud.quaternion.copy(camera.quaternion);
         }
+        world.remnant.visible = travel > 0.34 && travel < 0.55;
+        world.remnant.material.uniforms.uOpacity.value =
+          band(travel, 0.34, 0.4) * (1 - band(travel, 0.49, 0.55));
+        world.pulsar.visible = world.remnant.visible;
+        world.remnant.quaternion.copy(camera.quaternion);
+        world.remnant.rotateZ(time * 0.006);
+        world.pulsar.material.opacity = 0.7 + Math.sin(time * 1.4) * 0.12;
+        world.blackHole.visible = travel > 0.46 && travel < 0.69;
+        world.blackHole.material.uniforms.uOpacity.value =
+          band(travel, 0.46, 0.51) * (1 - band(travel, 0.64, 0.69));
+        world.blackHole.quaternion.copy(camera.quaternion);
+        world.blackHole.rotateZ(-0.12);
+        const merge = band(travel, 0.49, 0.6);
+        world.companion.visible = world.blackHole.visible && merge < 0.98;
+        world.companion.position.set(
+          world.blackHole.position.x + Math.cos(merge * 5) * 180 * (1 - merge),
+          30 + Math.sin(merge * 5) * 90 * (1 - merge),
+          -2390,
+        );
+        world.companion.quaternion.copy(camera.quaternion);
+        world.companion.scale.setScalar(0.7 * (1 - merge));
+        world.quasar.visible = travel > 0.61 && travel < 0.86;
+        world.jetGroup.visible = world.quasar.visible;
+        world.quasar.quaternion.copy(camera.quaternion);
+        world.quasar.rotateZ(-0.3);
+        world.galaxies.visible = travel > 0.77;
+        world.galaxyMaterials.forEach((m) => {
+          m.uniforms.uOpacity.value = band(travel, 0.77, 0.82) * 0.95;
+        });
+        bloom.strength = 0.14 + Math.sin(eruption * Math.PI) * 0.14;
+
+        if (
+          !still &&
+          !playback.current.cinema &&
+          eruption > 0 &&
+          eruption < 1
+        ) {
+          projected.copy(world.nova.position).project(camera);
+          nova.current.report({
+            active: true,
+            x: (projected.x * 0.5 + 0.5) * state.width,
+            y: (-projected.y * 0.5 + 0.5) * state.height,
+            radius: Math.pow(eruption, 0.6) * state.height * 1.7,
+          });
+        } else nova.current.report({ active: false });
+        const wave = Math.sin(band(travel, 0.53, 0.66) * Math.PI);
+        if (!still && !playback.current.cinema && wave > 0.01) {
+          projected.copy(world.blackHole.position).project(camera);
+          ripple.current.report({
+            active: true,
+            x: (projected.x * 0.5 + 0.5) * state.width,
+            y: (-projected.y * 0.5 + 0.5) * state.height,
+            amplitude: wave * (isPhone ? 4 : 7),
+            wavelength: 190,
+            phase: travel * 90 - time * 1.4,
+          });
+        } else ripple.current.report({ active: false });
+        composer.render();
+        if (progressRef.current)
+          progressRef.current.style.setProperty('--travel', travel);
+        const chapterIndex = Math.min(7, Math.floor(travel * 7 + 0.28));
+        if (state.chapter !== chapterIndex) {
+          state.chapter = chapterIndex;
+          setChapter(chapterIndex);
+        }
+        // Reduce resolution on sustained slow frames, including later, heavier chapters.
+        // Never oscillate quality or create a second animation loop during a resize.
+        if (!still && dt > 0) {
+          state.frames++;
+          state.totalMs += dt * 1000;
+          if (state.frames === 120) {
+            if (state.totalMs / 120 > 27 && state.dpr > 0.8) {
+              state.dpr = Math.max(0.8, state.dpr - 0.25);
+              resize();
+            }
+            state.frames = 0;
+            state.totalMs = 0;
+          }
+        }
+      }
+      if (!still && !state.raf) state.raf = requestAnimationFrame(draw);
+    }
+    engineApi.wake = () => {
+      state.dirty = true;
+      state.last = 0;
+      if (!state.raf && !document.hidden)
+        state.raf = requestAnimationFrame(draw);
+    };
+    const visibility = () => {
+      cancelAnimationFrame(state.raf);
+      state.last = 0;
+      if (!document.hidden) {
+        state.dirty = true;
+        state.raf = requestAnimationFrame(draw);
+      }
+    };
+    const contextLost = (e) => {
+      e.preventDefault();
+      state.lost = true;
+      cancelAnimationFrame(state.raf);
+      setCinema(false);
+      setAvailable(false);
+    };
+    const contextRestored = () => {
+      state.lost = false;
+      state.dirty = true;
+      setAvailable(true);
+      visibility();
+    };
+    document.addEventListener('visibilitychange', visibility);
+    canvas.addEventListener('webglcontextlost', contextLost);
+    canvas.addEventListener('webglcontextrestored', contextRestored);
+    if (!state.raf) state.raf = requestAnimationFrame(draw);
+    return () => {
+      disposed = true;
+      engineApi.wake = () => {};
+      cancelAnimationFrame(state.raf);
+      observer.disconnect();
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', readScroll);
+      window.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerleave', resetPointer);
+      document.removeEventListener('visibilitychange', visibility);
+      canvas.removeEventListener('webglcontextlost', contextLost);
+      canvas.removeEventListener('webglcontextrestored', contextRestored);
+      world.dispose();
+      bloom.dispose();
+      composer.passes.forEach((p) => {
+        if (p !== bloom) p.dispose?.();
       });
+      composer.dispose();
       renderer.dispose();
     };
   }, [reduced, isPhone, nova, ripple]);
 
+  const current = voyage.chapters[chapter];
   return (
     <>
       <canvas ref={canvasRef} className="voyage" aria-hidden="true" />
       <div className="voyage-scrim" aria-hidden="true" />
+      <div className="voyage-vignette" aria-hidden="true" />
+      {available ? (
+        <aside
+          className="voyage-hud"
+          aria-label="Voyager journey"
+          ref={progressRef}
+        >
+          <div className="voyage-hud__location">
+            <span className="voyage-hud__signal" />
+            <span className="voyage-hud__number">0{chapter + 1}</span>
+            <div>
+              <span className="voyage-hud__eyebrow">{voyage.title}</span>
+              <span className="voyage-hud__name">
+                {current.name}
+                <span> / {current.place}</span>
+              </span>
+            </div>
+          </div>
+          <nav className="voyage-hud__route" aria-label="Journey chapters">
+            {voyage.chapters.map((c, i) => (
+              <a
+                key={c.id}
+                href={`#${c.id}`}
+                title={c.name}
+                aria-label={`Chapter ${i + 1}: ${c.name}`}
+                aria-current={chapter === i ? 'step' : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToHash(`#${c.id}`);
+                }}
+              >
+                <span />
+              </a>
+            ))}
+          </nav>
+          <div className="voyage-hud__actions">
+            {!reduced && (
+              <button
+                className="voyage-hud__pause"
+                aria-label={paused ? voyage.resume : voyage.pause}
+                aria-pressed={paused}
+                onClick={() => setPaused((p) => !p)}
+              >
+                <span aria-hidden="true">{paused ? '▷' : 'Ⅱ'}</span>
+              </button>
+            )}
+            <button
+              ref={toggleRef}
+              className="voyage-hud__toggle"
+              aria-pressed={cinema}
+              onClick={() => setCinema((c) => !c)}
+            >
+              <span aria-hidden="true">{cinema ? '↙' : '↗'}</span>
+              {cinema ? voyage.back : voyage.view}
+            </button>
+          </div>
+          {cinema && (
+            <div className="voyage-caption" key={chapter}>
+              <span>0{chapter + 1} / 08</span>
+              <h2>{current.name}</h2>
+              <p>{current.note}</p>
+              <small>{voyage.exitHint}</small>
+            </div>
+          )}
+        </aside>
+      ) : (
+        <p className="visually-hidden" role="status">
+          {voyage.fallback}
+        </p>
+      )}
     </>
   );
 }

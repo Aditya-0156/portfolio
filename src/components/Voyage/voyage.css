@@ -1,44 +1,27 @@
 @layer components {
-  /* The voyage sits behind everything and is never interactive. It paints an opaque sky, so the
-     page under it stays transparent and the world runs edge to edge. */
-  .voyage {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -2;
-    pointer-events: none;
-    display: block;
-  }
-
-  /* A scrim raked across the reading column. The world is busy and the type has to win, so the
-     side the text sits on is held down and the side the set pieces occupy is left open. */
-  .voyage-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      linear-gradient(90deg, var(--scrim-near) 0%, var(--scrim-mid) 38%, transparent 66%),
-      linear-gradient(180deg, var(--scrim-near) 0%, transparent 18%);
-  }
-  @media (max-width: 899px) {
-    .voyage-scrim {
-      background:
-        linear-gradient(180deg, var(--scrim-near) 0%, var(--scrim-mid) 42%, transparent 82%),
-        linear-gradient(0deg, var(--scrim-near) 0%, transparent 24%);
-    }
-  }
-
   /* ── The forge ───────────────────────────────────────────────────────────
      A star makes the heavy elements in the shell it throws off. As the blast front crosses the
      page, the type it has already passed is painted from the inside out: white hot at the centre,
      cooling through gold and ember, back to its own colour at the front. The gradient is clipped
      to the glyphs, so the colour crosses a word mid-letter.
      Every colour here clears AA on its own ground, so the text stays readable at every moment. */
-  [data-forge] { --forge-base: var(--fg-0); --forge-x: 50%; --forge-y: 50%; --forge-r: 0px; }
-  [data-forge].prose, p[data-forge], li[data-forge], .t-small[data-forge] { --forge-base: var(--fg-1); }
-  [data-forge].t-mono, [data-forge].t-mono-label, [data-forge].dim { --forge-base: var(--fg-2); }
+  [data-forge] {
+    --forge-base: var(--fg-0);
+    --forge-x: 50%;
+    --forge-y: 50%;
+    --forge-r: 0px;
+  }
+  [data-forge].prose,
+  p[data-forge],
+  li[data-forge],
+  .t-small[data-forge] {
+    --forge-base: var(--fg-1);
+  }
+  [data-forge].t-mono,
+  [data-forge].t-mono-label,
+  [data-forge].dim {
+    --forge-base: var(--fg-2);
+  }
 
   [data-forge].is-forging {
     background-image: radial-gradient(
@@ -58,12 +41,16 @@
   /* The accent mark keeps its own colour rather than being swallowed by the front. */
   [data-forge].is-forging .mark,
   [data-forge].is-forging .trace__dot,
-  [data-forge].is-forging .pub__mark { -webkit-text-fill-color: initial; }
+  [data-forge].is-forging .pub__mark {
+    -webkit-text-fill-color: initial;
+  }
 
   /* ── The ripple ──────────────────────────────────────────────────────────
      Blocks marked for the gravitational wave. The transform is written per frame by the hook;
      this only declares what may be moved and keeps it from fighting the reveal animations. */
-  [data-ripple] { transform-origin: 50% 50%; }
+  [data-ripple] {
+    transform-origin: 50% 50%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -72,5 +59,378 @@
     -webkit-text-fill-color: currentColor;
     color: inherit;
   }
-  [data-ripple] { transform: none !important; }
+  [data-ripple] {
+    transform: none !important;
+  }
+}
+
+@layer components {
+  .voyage {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    pointer-events: none;
+  }
+  .voyage-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(3, 6, 12, 0.94),
+        rgba(3, 6, 12, 0.74) 33%,
+        rgba(3, 6, 12, 0.3) 63%,
+        rgba(3, 6, 12, 0.06)
+      ),
+      linear-gradient(0deg, rgba(3, 6, 12, 0.55), transparent 25%);
+    transition: opacity 0.8s ease;
+  }
+  .voyage-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    box-shadow: inset 0 0 140px 25px rgba(0, 0, 0, 0.22);
+  }
+  .voyage-hud {
+    --travel: 0;
+    position: fixed;
+    bottom: 0;
+    inset-inline: 0;
+    z-index: 55;
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 12px 40px;
+    background: linear-gradient(
+      0deg,
+      rgba(3, 6, 12, 0.97),
+      rgba(3, 6, 12, 0.8)
+    );
+    border-top: 1px solid rgba(187, 204, 228, 0.15);
+    color: #e8edf3;
+    font-family: var(--font-mono);
+  }
+  .voyage-hud::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    height: 1px;
+    width: 100%;
+    transform: scaleX(var(--travel));
+    transform-origin: left;
+    background: #dcb787;
+  }
+  .voyage-hud__location {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .voyage-hud__signal {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #dfbe93;
+    box-shadow: 0 0 14px #caa06a;
+  }
+  .voyage-hud__number {
+    font-size: 24px;
+    font-weight: 300;
+    color: #dcb787;
+  }
+  .voyage-hud__eyebrow {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: #9ba8b9;
+    margin-bottom: 6px;
+  }
+  .voyage-hud__name {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.03em;
+  }
+  .voyage-hud__name > span {
+    color: #9ba8b9;
+  }
+  .voyage-hud__route {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .voyage-hud__route a {
+    width: 30px;
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+  }
+  .voyage-hud__route a span {
+    width: 20px;
+    height: 2px;
+    background: #4c5866;
+    transition:
+      background 0.3s,
+      transform 0.3s;
+  }
+  .voyage-hud__route a[aria-current] span {
+    background: #e5c397;
+    transform: scaleY(2);
+  }
+  .voyage-hud__route a:hover span {
+    background: #e8edf3;
+  }
+  .voyage-hud__actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .voyage-hud__pause {
+    min-width: 44px;
+    min-height: 44px;
+    text-align: center;
+    color: #b8c3d0;
+    font-size: 17px;
+  }
+  .voyage-hud__toggle {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+  .voyage-hud__toggle > span {
+    color: #dcb787;
+    font-size: 20px;
+  }
+  .voyage-caption {
+    position: fixed;
+    bottom: 150px;
+    left: 7vw;
+    pointer-events: none;
+    animation: voyage-caption-in 0.7s ease both;
+  }
+  .voyage-caption > span {
+    font-size: 10px;
+    color: #e5c397;
+    letter-spacing: 0.22em;
+  }
+  .voyage-caption h2 {
+    font-family: var(--font-sans);
+    font-size: clamp(42px, 6vw, 90px);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+    margin: 12px 0;
+  }
+  .voyage-caption p {
+    font-size: 12px;
+    color: #c4cfdd;
+    max-width: 38ch;
+  }
+  .voyage-caption small {
+    display: block;
+    color: #a5b3c4;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    margin-top: 28px;
+  }
+  .footer {
+    padding-bottom: 120px;
+  }
+  main,
+  .nav,
+  .footer-wrap {
+    transition:
+      opacity 0.7s ease,
+      visibility 0.7s;
+  }
+  .voyage-cinema main,
+  .voyage-cinema .nav,
+  .voyage-cinema .footer-wrap {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .voyage-cinema .voyage-scrim {
+    opacity: 0.22;
+  }
+  .nav {
+    background: rgba(3, 6, 12, 0.8);
+    backdrop-filter: blur(16px);
+  }
+  .hero__name {
+    text-shadow: 0 3px 50px rgba(0, 0, 0, 0.28);
+  }
+  @media (min-width: 900px) {
+    .hero__name {
+      display: block;
+      font-size: clamp(88px, 8.8vw, 144px);
+      letter-spacing: -0.065em;
+      line-height: 0.91;
+    }
+    .hero__name .mask {
+      padding-bottom: 0.06em;
+    }
+    .hero__identity {
+      padding-block: 32px 72px;
+    }
+    .hero__role {
+      font-size: 16px;
+      max-width: 36ch;
+      line-height: 1.55;
+      margin-top: 28px;
+    }
+    .hero__statement {
+      max-width: 43ch;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+    .hero__ctas {
+      gap: 12px 20px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+      max-width: 560px;
+    }
+    .hero__cue {
+      margin-bottom: 65px;
+    }
+  }
+  @media (max-width: 1100px) {
+    .voyage-hud__name > span {
+      display: none;
+    }
+  }
+  @media (max-width: 899px) {
+    .voyage-hud {
+      padding: 10px 20px;
+      min-height: 70px;
+      gap: 12px;
+    }
+    .voyage-hud__route {
+      display: none;
+    }
+    .voyage-hud__eyebrow {
+      font-size: 7px;
+      letter-spacing: 0.1em;
+    }
+    .voyage-hud__number {
+      font-size: 20px;
+    }
+    .voyage-hud__location {
+      gap: 10px;
+    }
+    .voyage-hud__signal {
+      display: none;
+    }
+    .voyage-hud__actions {
+      gap: 4px;
+    }
+    .voyage-hud__toggle {
+      font-size: 9px;
+    }
+    .voyage-scrim {
+      background:
+        linear-gradient(90deg, rgba(3, 6, 12, 0.85), rgba(3, 6, 12, 0.46)),
+        linear-gradient(0deg, rgba(3, 6, 12, 0.7), transparent 45%);
+    }
+    .hero__inner {
+      min-height: calc(100svh - var(--nav-h));
+      padding-bottom: 105px;
+    }
+    .hero__identity {
+      padding-top: 85px;
+    }
+    .hero__statement {
+      max-width: 38ch;
+    }
+    .voyage-caption {
+      left: 24px;
+      bottom: 130px;
+      right: 24px;
+    }
+  }
+  @media (max-width: 380px) {
+    .voyage-hud {
+      padding-inline: 12px;
+    }
+    .voyage-hud__eyebrow {
+      display: none;
+    }
+  }
+  @keyframes voyage-caption-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer components {
+  .hero .hero__inner {
+    padding-bottom: 100px;
+  }
+  .hero .hero__cue {
+    margin-bottom: 0;
+  }
+  .voyage-cinema .voyage-caption {
+    text-shadow: 0 2px 24px #000;
+  }
+}
+
+@layer components {
+  .section__content {
+    position: relative;
+    isolation: isolate;
+  }
+  .section__content::before {
+    content: '';
+    position: absolute;
+    inset: -28px;
+    z-index: -1;
+    pointer-events: none;
+    background: rgba(3, 6, 12, 0.88);
+    border: 1px solid rgba(168, 190, 217, 0.06);
+    border-radius: 3px;
+    box-shadow: 0 10px 60px rgba(0, 0, 0, 0.14);
+  }
+  @media (max-width: 899px) {
+    .section__content::before {
+      inset: -16px;
+      background: rgba(3, 6, 12, 0.91);
+      border: 0;
+    }
+    .hero .hero__inner {
+      padding-bottom: 100px;
+    }
+    .hero__role {
+      font-size: 16px;
+    }
+    .hero__statement {
+      font-size: 16px;
+    }
+    .hero__name {
+      letter-spacing: -0.055em;
+    }
+    .voyage-scrim {
+      background: linear-gradient(
+        180deg,
+        rgba(3, 6, 12, 0.6),
+        rgba(3, 6, 12, 0.28) 20%,
+        rgba(3, 6, 12, 0.8) 44%,
+        rgba(3, 6, 12, 0.96) 78%
+      );
+    }
+  }
 }

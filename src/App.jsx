@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import SkipLink from './components/SkipLink.jsx';
 import Nav from './components/Nav.jsx';
 import Hero from './components/Hero.jsx';
@@ -10,8 +10,11 @@ import Stack from './components/Stack.jsx';
 import Education from './components/Education.jsx';
 import Contact from './components/Contact.jsx';
 import Footer from './components/Footer.jsx';
-import Voyage from './components/Voyage/Voyage.jsx';
-import { ActiveSectionContext, useActiveSectionObserver } from './hooks/useActiveSection.js';
+const Voyage = lazy(() => import('./components/Voyage/Voyage.jsx'));
+import {
+  ActiveSectionContext,
+  useActiveSectionObserver,
+} from './hooks/useActiveSection.js';
 import { useMotionPrefs } from './hooks/useMotionPrefs.js';
 import { useLenis } from './hooks/useLenis.js';
 
@@ -25,7 +28,16 @@ import stack from './content/stack.js';
 import education from './content/education.js';
 import contact from './content/contact.js';
 
-const SECTION_IDS = ['top', 'now', 'work', 'projects', 'research', 'stack', 'education', 'contact'];
+const SECTION_IDS = [
+  'top',
+  'now',
+  'work',
+  'projects',
+  'research',
+  'stack',
+  'education',
+  'contact',
+];
 const INDEX_LABELS = {
   top: '01 / INDEX',
   now: '02 / NOW',
@@ -45,7 +57,11 @@ export default function App() {
 
   const extraLinks = useMemo(
     () => [
-      { label: site.nav.github.label, href: site.nav.github.href, external: true },
+      {
+        label: site.nav.github.label,
+        href: site.nav.github.href,
+        external: true,
+      },
       { label: 'LinkedIn', href: contact.links[0].href, external: true },
       { label: 'Email', href: `mailto:${contact.email}` },
       { label: contact.resume.label, href: resumeHref, external: true },
@@ -55,7 +71,9 @@ export default function App() {
 
   return (
     <ActiveSectionContext.Provider value={active}>
-      <Voyage reduced={reduced} isPhone={isPhone} />
+      <Suspense fallback={null}>
+        <Voyage reduced={reduced} isPhone={isPhone} />
+      </Suspense>
       <SkipLink targetId="content" label={site.nav.skipLabel} />
       <Nav content={site} indexLabels={INDEX_LABELS} extraLinks={extraLinks} />
       <main id="content">

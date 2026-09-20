@@ -4,83 +4,86 @@ Personal site for Aditya Yadav, Forward Deployment Engineer at Cornerstone OnDem
 
 Live at https://aditya-0156.github.io/portfolio/
 
-## Design
+## The Voyager journey
 
-The background is not a background. It is a voyage, and the page travels through it.
+A scroll driven journey through eight chapters: departure, a ring crossing, a supernova, its remnant, a black hole merger, a quasar, a galaxy cluster, and the open universe. The camera follows a continuous spline measured against the actual page sections. Voyager changes position, distance and attitude along the route.
 
-A Voyager probe leaves at the top of the page and the reader goes with it. Each section of the
-site is a place on the road: an outer planet with its ring system, a supernova, the remnant that
-blast leaves behind, two black holes spiralling into each other, a quasar running its jets, and a
-cluster of galaxies at the end. Camera stations are measured from where the sections actually sit
-on the page, not from an even split of the scroll, so every set piece fires exactly as its section
-arrives. Nothing is a model or a texture: the probe, the planet, the disks and every particle are
-built from primitives and seeded noise at runtime.
+The scene is generated at runtime without downloaded models or image textures:
 
-Two of those set pieces do not stay inside the canvas.
+- A gas giant with turbulent cloud bands, directional lighting, fine ring structure and a planetary shadow across the rings.
+- Layered stellar depth and a procedural sky with cool dust and warm gas.
+- A supernova with GPU driven ejecta and a nebular remnant.
+- Curved ray integration around the black hole, with an accretion disk, lensed secondary images and asymmetric disk brightness. This is an artistic approximation, not a scientific simulation.
+- Quasar jets and procedural spiral galaxies with dust lanes and embedded stars.
+- Filmic tone mapping and restrained bloom.
 
-**The forge.** A star makes the heavy elements in the shell it throws off. When the blast front
-crosses the page it does the same to the document: the type it has already passed is painted from
-the inside out, white hot at the centre and cooling through gold and ember back to its own colour
-at the front. The wavefront is a radial gradient clipped to the glyphs, so the colour crosses a
-word mid-letter rather than switching a block at once. Every colour in the palette clears WCAG AA
-on its own ground, so the text stays readable at every moment of the sweep.
+The supernova also paints the text in its wake. The merger sends a travelling displacement through the page components. Reading surfaces protect text from bright scenery.
 
-**The ripple.** A passing gravitational wave stretches space along one axis and squeezes the
-other, then alternates. When the two black holes merge, that is applied to the blocks of the
-layout: each one is displaced and distorted by a travelling wave radiating from the merger,
-strongest near it and falling off with distance, so the page itself rings as the wave goes through.
+**View voyage** hides the portfolio and reveals full scene compositions with chapter captions. Scroll or use the chapter rail to travel. **Back to portfolio** or Escape restores the page and keyboard access. The pause control stops continuous canvas rendering while leaving scrolling available.
 
-Both themes are first class and get different worlds. Dark is a cosmos of light on black. Light is
-the same voyage drawn as ink on paper: the particle clouds stop adding light and start laying down
-pigment, and the glows, which only exist to brighten a dark sky, stand down.
-
-Type does the rest: one grotesk, one mono, hairline rules, and a sticky mono rail that indexes
-every section.
+The site intentionally stays dark. The existing light mode button opens the LightGate interaction.
 
 ## Stack
 
 - React 19 and Vite 7
-- Tailwind CSS v4, configured in CSS
-- three.js for the voyage, with everything in it generated at runtime
-- GSAP with ScrollTrigger for the intro, the scroll camera and reveals, Lenis for smooth scrolling
-- No UI framework, no icon library, no 3D library, no images
+- Tailwind CSS v4
+- Three.js, custom GLSL materials, and postprocessing
+- GSAP with ScrollTrigger for intro and content motion
+- Lenis for smooth scrolling
+- Playwright for browser verification
+
+The portfolio renders independently of the lazy loaded voyage. Three.js has its own cacheable bundle.
 
 ## Run locally
 
-```
+```sh
 npm install
 npm run dev
 ```
 
 ## Build and deploy
 
-```
+```sh
 npm run build
 npm run deploy
 ```
 
-`npm run build` runs the contrast check first. `npm run deploy` publishes `dist` to GitHub Pages.
+The build runs the contrast check first. Deployment publishes `dist` to the existing `gh-pages` branch. Vite uses `/portfolio/` as the base path.
 
 ## Checks
 
+```sh
+npm run lint
+npm run lint:contrast
+npm run test:e2e
 ```
-npm run lint            # eslint
-npm run lint:contrast   # WCAG AA contrast of every token pair, both themes
+
+The browser suite uses locally installed Google Chrome. It checks every chapter for runtime and shader errors, pause and resume using actual WebGL draw counts, reduced motion, mobile overflow and navigation, the resume link, missing WebGL, and GPU context loss.
+
+To exercise a production preview or the deployed site:
+
+```sh
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173/portfolio/ npm run test:e2e
 ```
 
-## Content
+Screenshots, browser traces and local visual experiments are ignored by Git.
 
-Every string on the page lives in `src/content`. Components hold no prose. `src/content/limits.js` records the length each slot can hold, and `src/lib/copyFit.js` warns in development when a slot runs past it. The resume PDF lives in `public`.
+## Motion and performance
 
-## Motion
+Animation uses elapsed time rather than a fixed per-frame interpolation factor. Phone rendering starts with fewer stars and explosion particles and a lower pixel ratio. Sustained slow frames reduce rendering resolution further. The explosion expands in a vertex shader instead of rewriting particle positions on the CPU.
 
-Every effect respects `prefers-reduced-motion`: the voyage paints one still frame of the launch
-and then nothing moves again, the forge and the ripple are never created, the scroll camera is
-never created, and reveals resolve to their finished state. Phones get fewer particles and a lower
-pixel ratio, a missing WebGL context falls back to the flat background with the page fully intact,
-and the loop stops entirely while the tab is hidden. Scrolling through the blast, which is the
-heaviest moment on the page, holds a steady 60 frames per second on both desktop and phone.
+The animation loop stops when the tab is hidden. Pause and reduced motion render only when scrolling, resizing or changing a relevant control. Reduced motion also disables the text forge, layout ripple, smooth scroll and animated reveals. Without WebGL, portfolio content and links remain available. Losing a graphics context exits voyage mode so content cannot remain hidden.
 
-## Notes
+Performance depends on the device, viewport and GPU. Local desktop Chrome samples at 1440 × 1000 reached approximately 60 fps; this is not a claim about all phones or browsers.
 
-This site was designed and built with AI assistance using Claude Code.
+## Content and implementation
+
+Portfolio copy lives in `src/content`. Journey labels and captions live in `src/content/voyage.js`. Career facts and the resume were preserved during the visual rebuild.
+
+- `src/components/Voyage/Voyage.jsx`: scene lifecycle, camera path, chapter mapping, controls and motion preferences.
+- `src/lib/voyage/world.js`: scene construction and GPU explosion geometry.
+- `src/lib/voyage/shaders.js`: procedural sky, planet, rings, black hole, nebulae and galaxies.
+- `src/lib/probe.js`: Voyager geometry.
+- `src/hooks/useNova.js` and `src/hooks/useRipple.js`: effects that reach into the document.
+
+The site was built with AI assistance using Claude Code and Codex.
