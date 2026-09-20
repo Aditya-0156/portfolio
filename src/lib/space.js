@@ -147,37 +147,6 @@ export function debrisShell(n, { reach = 1000, sizeScale = 1, hot = [1, 0.95, 0.
   };
 }
 
-/** An accretion disk: points on near-circular orbits, hotter toward the inside. */
-export function accretionDisk(n, rIn, rOut, tint = [1, 0.55, 0.3], seed = 23) {
-  const rand = mulberry32(seed);
-  const ang = new Float32Array(n);
-  const rad = new Float32Array(n);
-  const mesh = points(n, (i, o) => {
-    const u = Math.pow(rand(), 0.5);
-    const r = lerp(rIn, rOut, u);
-    const a = rand() * Math.PI * 2;
-    ang[i] = a; rad[i] = r;
-    o.p = [Math.cos(a) * r, (rand() - 0.5) * (0.5 + u * 2.6), Math.sin(a) * r];
-    const heat = 1 - u;
-    o.c = [lerp(tint[0] * 0.85, 1, heat), lerp(tint[1] * 0.6, 0.96, heat * heat), lerp(tint[2] * 0.5, 0.9, heat * heat * heat)];
-  }, { size: 1.4, opacity: 0.95 });
-
-  const pos = mesh.geometry.attributes.position.array;
-  return {
-    mesh,
-    /** Keplerian: the inside laps the outside. `squeeze` shrinks the disk as the orbit decays. */
-    spin(dt, squeeze = 1) {
-      for (let i = 0; i < n; i++) {
-        ang[i] += dt * (30 / (rad[i] + 5));
-        const r = rad[i] * squeeze;
-        pos[i * 3] = Math.cos(ang[i]) * r;
-        pos[i * 3 + 2] = Math.sin(ang[i]) * r;
-      }
-      mesh.geometry.attributes.position.needsUpdate = true;
-    },
-  };
-}
-
 /** A face-on spiral galaxy with a hot core, blue arms and a dust lane. */
 export function spiralGalaxy(n, radius, arms = 2, seed = 31) {
   const rand = mulberry32(seed);
