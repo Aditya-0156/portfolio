@@ -1,19 +1,34 @@
 @layer components {
+  .projects__content { container: projects / inline-size; }
   .projects__intro { color: var(--fg-1); margin-bottom: var(--s-6); }
 
-  /* The flagship panel: the centrepiece. A raised surface with a stronger hairline. */
+  /* Open reading surfaces let the remnant remain visible between and behind the copy. */
   .flagship {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s-7);
-    background: var(--bg-1);
-    border: 1px solid var(--hairline-strong);
-    border-radius: 2px;
-    padding: var(--s-5);
+    background: transparent;
+    border: 0;
+    padding: var(--s-6) 0;
+    text-shadow: 0 1px 8px rgba(3, 6, 12, 0.7);
   }
-  @media (min-width: 600px) { .flagship { padding: var(--s-6); } }
-  @media (min-width: 900px) { .flagship { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-7); padding: var(--s-7); } }
+  .flagship::before,
+  .card__link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--hairline-strong), transparent);
+    pointer-events: none;
+  }
+  /* The compact reading column needs a full-width ledger. Split only when both fit. */
+  @container projects (min-width: 960px) {
+    .flagship { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
 
+  .flagship__left { min-width: 0; }
   .flagship__labels { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); }
   .flagship__title { margin-top: var(--s-4); }
   .flagship__tagline { margin-top: var(--s-3); color: var(--fg-1); max-width: 34ch; }
@@ -43,16 +58,16 @@
   .trace__slot { display: block; margin-bottom: var(--s-3); }
   .trace__table { width: 100%; border-collapse: collapse; table-layout: auto; }
   .trace__row > td { padding: 4px 0; vertical-align: baseline; }
-  .trace__row:hover > td { background: var(--bg-2); }
+  .trace__row:hover .trace__detail { color: var(--fg-0); }
   .trace__index { width: 2.6em; color: var(--fg-2); }
   .trace__kind { width: 4.4em; color: var(--fg-2); padding-right: var(--s-3) !important; }
-  .trace__label { color: var(--fg-0); padding-right: var(--s-4) !important; white-space: nowrap; }
-  .trace__detail { color: var(--fg-1); }
+  .trace__label { color: var(--fg-0); padding-right: var(--s-4) !important; overflow-wrap: anywhere; }
+  .trace__detail { color: var(--fg-1); transition: color var(--d-fast) var(--ease-inout); }
   .trace__dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
   .trace__row--risk .trace__kind { color: var(--accent-text); }
 
-  /* Phone: two lines per row, nothing dropped. */
-  @media (max-width: 599px) {
+  /* Narrow columns: two lines per row, nothing dropped. */
+  @container projects (max-width: 599px) {
     .trace__table, .trace__table tbody, .trace__row { display: block; width: 100%; }
     .trace__row { display: grid; grid-template-columns: 2.4em 4.2em minmax(0, 1fr); padding: 5px 0; }
     .trace__row > td { padding: 0; }
@@ -66,18 +81,22 @@
   .facts__value { display: block; margin-top: var(--s-1); color: var(--fg-0); }
 
   /* Secondary cards */
-  .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); margin-top: var(--s-6); }
-  @media (min-width: 600px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); margin-top: var(--s-6); }
+  @container projects (min-width: 680px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .card { min-width: 0; }
   .card__link {
+    position: relative;
     display: flex; flex-direction: column; height: 100%;
-    border: 1px solid var(--hairline-strong); border-radius: 2px; padding: var(--s-5);
-    transition: border-color var(--d-fast) var(--ease-inout), background-color var(--d-fast) var(--ease-inout);
+    border: 0; padding: var(--s-5) 0;
+    background: transparent;
+    text-shadow: 0 1px 8px rgba(3, 6, 12, 0.7);
   }
-  .card__link:hover { border-color: var(--fg-2); background: var(--bg-1); }
+  .card__link::before { transition: opacity var(--d-fast) var(--ease-inout); opacity: 0.7; }
+  .card__link:is(:hover, :focus-visible)::before { opacity: 1; }
+  .card__link:is(:hover, :focus-visible) .card__title { color: var(--forge-1); }
   .card__labels { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
   .card__stack { text-align: right; }
-  .card__title { margin-top: var(--s-4); }
+  .card__title { margin-top: var(--s-4); transition: color var(--d-fast) var(--ease-inout); }
   .card__tagline { margin-top: var(--s-2); color: var(--fg-1); }
   .card__summary { margin-top: var(--s-4); color: var(--fg-1); flex: 1; }
   .card__cta { display: inline-flex; align-items: center; gap: 0.5em; margin-top: var(--s-5); color: var(--fg-0); }
@@ -91,8 +110,8 @@
   .more__name { color: var(--fg-1); transition: color var(--d-fast) var(--ease-inout); }
   .more__note { grid-column: 1; }
   .more__glyph { grid-row: 1; grid-column: 2; color: var(--fg-2); }
-  @media (min-width: 900px) {
-    .more__link { grid-template-columns: 22rem minmax(0, 1fr) auto; }
+  @container projects (min-width: 680px) {
+    .more__link { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
     .more__note { grid-column: 2; grid-row: 1; }
     .more__glyph { grid-column: 3; }
   }

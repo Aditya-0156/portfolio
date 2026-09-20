@@ -18,14 +18,6 @@
       var(--hairline),
       #ffdba3 calc(var(--nova-heat, 0) * 85%)
     );
-    background-image: linear-gradient(
-      130deg,
-      rgba(255, 156, 69, calc(var(--nova-heat, 0) * 0.08)),
-      transparent 70%
-    );
-    box-shadow:
-      0 -1px 0 rgba(255, 193, 109, calc(var(--nova-heat, 0) * 0.42)),
-      0 0 42px rgba(235, 99, 30, calc(var(--nova-heat, 0) * 0.09));
   }
   [data-forge].is-forging {
     --forge-warm: color-mix(
@@ -44,7 +36,10 @@
       var(--forge-1) calc(var(--forge-r) + var(--forge-width) * 0.15),
       var(--forge-base) calc(var(--forge-r) + var(--forge-width) * 0.8)
     );
-    text-shadow: 0 0 16px rgba(255, 167, 76, calc(var(--forge-heat, 0) * 0.42));
+    text-shadow:
+      0 1px 2px #03060c,
+      0 0 5px rgba(3, 6, 12, 0.9),
+      0 0 16px rgba(255, 167, 76, calc(var(--forge-heat, 0) * 0.42));
   }
   [data-ripple] {
     transform-origin: 50% 50%;
@@ -64,5 +59,24 @@
     scale: none !important;
     rotate: none !important;
     filter: none !important;
+  }
+}
+
+@layer components {
+  #stack .stack__label,
+  #stack .stack__item,
+  #education .entry__body h3 {
+    text-shadow:
+      0 1px 3px #03060c,
+      0 0 calc(4px + var(--quasar-light, 0) * 15px)
+        rgba(89, 175, 255, calc(var(--quasar-light, 0) * 0.8));
+  }
+  #stack .stack__rule {
+    border-color: color-mix(
+      in srgb,
+      var(--hairline),
+      #91cdff calc(var(--quasar-light, 0) * 65%)
+    );
+    box-shadow: 0 0 12px rgba(89, 175, 255, calc(var(--quasar-light, 0) * 0.25));
   }
 }

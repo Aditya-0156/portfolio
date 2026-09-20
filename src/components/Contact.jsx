@@ -6,7 +6,7 @@ import './contact.css';
 export default function Contact({ content, resumeHref }) {
   const links = [...content.links, { label: content.resume.label, href: resumeHref, external: true }];
   return (
-    <Section id="contact" index="08" title={content.title} meta={content.meta}>
+    <Section id="contact" index="08" title={content.title}>
       <CopyEmail
         email={content.email}
         copyLabel={content.copyLabel}

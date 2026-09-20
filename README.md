@@ -6,7 +6,7 @@ Live at https://aditya-0156.github.io/portfolio/
 
 ## The Voyager journey
 
-A scroll driven journey through eight chapters: departure, a ring crossing, a supernova, its remnant, a black hole merger, a quasar, a galaxy cluster, and the open universe. The camera follows a continuous spline measured against the actual page sections. Voyager changes position, distance and attitude along the route.
+A scroll driven journey through eight chapters: departure, a ring crossing, a supernova, its remnant, a black hole, a quasar, a galaxy cluster, and the open universe. The camera follows a continuous spline measured against the actual page sections. Voyager changes position, distance and attitude along the route.
 
 The scene is generated at runtime without downloaded models or image textures:
 
@@ -14,10 +14,10 @@ The scene is generated at runtime without downloaded models or image textures:
 - Layered stellar depth and a procedural sky with cool dust and warm gas.
 - A collapsing star, a white-hot eruption, expanding three-dimensional gas shells, branching filaments, clumps and thousands of GPU driven ejecta particles.
 - Curved ray integration around the black hole, with an accretion disk, lensed secondary images and asymmetric disk brightness. This is an artistic approximation, not a scientific simulation.
-- Quasar jets and procedural spiral galaxies with dust lanes and embedded stars.
+- A luminous quasar nucleus with a tilted disk, three-dimensional bipolar jets and outward-moving plasma. Its blue pulse reaches the Stack content before giving way to spiral, barred and elliptical galaxies.
 - Filmic tone mapping and restrained bloom.
 
-The supernova's projected shock front also drives the page: work gathers toward the explosion, emerges through its shell, and cools through gold and copper. Each content block settles even if scrolling stops. The merger shares its wave phase with the document, pulling, stretching and releasing nearby research. Feathered shadows keep the copy readable without enclosing it in opaque panels. Work and Research have short arrival compositions that give their events room to unfold.
+The supernova's projected shock front also drives the page: work gathers toward the explosion, emerges through its shell, and cools through gold and copper. Each content block settles even if scrolling stops. The black hole shares its wave phase with the document, pulling, stretching and releasing nearby research. Sections use one left-aligned reading column with transparent project surfaces. The repeated sidebar labels, metadata columns and scene title cards are removed; the navigation and accessible document headings identify the sections. Local text shadows retain the scene behind the copy.
 
 **View voyage** hides the portfolio and reveals full scene compositions with chapter captions. Scroll or use the chapter rail to travel. **Back to portfolio** or Escape restores the page and keyboard access. The pause control stops continuous canvas rendering while leaving scrolling available.
 
@@ -83,6 +83,7 @@ Portfolio copy lives in `src/content`. Journey labels and captions live in `src/
 - `src/components/Voyage/Voyage.jsx`: scene lifecycle, camera path, chapter mapping, controls and motion preferences.
 - `src/lib/voyage/world.js`: scene construction.
 - `src/lib/voyage/supernova.js`: three-dimensional star, explosion geometry and emission shaders.
+- `src/lib/voyage/quasar.js`: luminous nucleus, accretion disk, plasma jets and particle outflow.
 - `src/lib/voyage/phenomenaPass.js`: refraction synchronized with the shock front and gravity wave.
 - `src/lib/voyage/shaders.js`: procedural sky, planet, rings, black hole, nebulae and galaxies.
 - `src/lib/probe.js`: Voyager geometry.

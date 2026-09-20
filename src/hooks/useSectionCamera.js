@@ -6,7 +6,7 @@ import { gsap, hasJs, prefersReducedMotion } from '../lib/motion.js';
  * time it is the thing you are reading, then pulls back as it leaves. The hold is
  * deliberate: text is only ever scaled while it is on its way in or out, never while it is being
  * read, and never faded, so contrast holds at every point of the scroll. Applied to the content
- * column rather than the section so the sticky rail keeps working.
+ * column rather than the section so chapter positions remain stable.
  */
 export function useSectionCamera(ref) {
   useLayoutEffect(() => {
@@ -22,7 +22,7 @@ export function useSectionCamera(ref) {
       // section is on its way in or out, so the depth comes from the field behind it instead.
       tl.fromTo(
         target,
-        { scale: 0.945, transformOrigin: '50% 50%' },
+        { scale: 0.945, transformOrigin: '0% 50%' },
         { scale: 1, duration: 0.26, ease: 'power2.out' },
       )
         .to(target, { scale: 1, duration: 0.5 })

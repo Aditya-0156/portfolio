@@ -290,22 +290,19 @@ export default function Voyage({ reduced, isPhone }) {
           band(travel, 0.46, 0.51) * (1 - band(travel, 0.64, 0.69));
         world.blackHole.quaternion.copy(camera.quaternion);
         world.blackHole.rotateZ(-0.12);
-        const merge = band(travel, 0.49, 0.6);
-        world.companion.visible = world.blackHole.visible && merge < 0.98;
-        world.companion.position.set(
-          world.blackHole.position.x + Math.cos(merge * 5) * 180 * (1 - merge),
-          30 + Math.sin(merge * 5) * 90 * (1 - merge),
-          -2390,
+        const quasarEnergy =
+          band(travel, 0.645, 0.7) * (1 - band(travel, 0.8, 0.875));
+        const quasarPulse = quasarEnergy * (0.7 + 0.3 * Math.sin(time * 1.5));
+        world.quasar.visible = quasarEnergy > 0.001;
+        if (world.quasar.visible)
+          world.quasarSystem.update(time, camera, quasarEnergy);
+        document.documentElement.style.setProperty(
+          '--quasar-light',
+          still ? '0' : quasarPulse.toFixed(3),
         );
-        world.companion.quaternion.copy(camera.quaternion);
-        world.companion.scale.setScalar(0.7 * (1 - merge));
-        world.quasar.visible = travel > 0.61 && travel < 0.86;
-        world.jetGroup.visible = world.quasar.visible;
-        world.quasar.quaternion.copy(camera.quaternion);
-        world.quasar.rotateZ(-0.3);
-        world.galaxies.visible = travel > 0.77;
+        world.galaxies.visible = travel > 0.755;
         world.galaxyMaterials.forEach((m) => {
-          m.uniforms.uOpacity.value = band(travel, 0.77, 0.82) * 0.95;
+          m.uniforms.uOpacity.value = band(travel, 0.755, 0.84) * 0.95;
         });
         bloom.strength = 0.2 + novaEnergy * 0.12 + flash * 0.18;
         phenomena.enabled = false;
@@ -462,6 +459,7 @@ export default function Voyage({ reduced, isPhone }) {
       if (state.gateOpen) {
         nova.current.report({ active: false });
         ripple.current.report({ active: false });
+        document.documentElement.style.setProperty('--quasar-light', '0');
         effects.style.setProperty('--event-alpha', '0');
       } else engineApi.wake();
     };
@@ -469,6 +467,7 @@ export default function Voyage({ reduced, isPhone }) {
     const contextLost = (e) => {
       e.preventDefault();
       state.lost = true;
+      document.documentElement.style.setProperty('--quasar-light', '0');
       cancelAnimationFrame(state.raf);
       state.raf = 0;
       nova.current.report({ active: false });
@@ -492,6 +491,7 @@ export default function Voyage({ reduced, isPhone }) {
     if (!state.raf) state.raf = requestAnimationFrame(draw);
     return () => {
       disposed = true;
+      document.documentElement.style.removeProperty('--quasar-light');
       engineApi.wake = () => {};
       cancelAnimationFrame(state.raf);
       observer.disconnect();

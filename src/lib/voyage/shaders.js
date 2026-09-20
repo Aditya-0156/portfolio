@@ -121,7 +121,7 @@ void main(){
 
 export const nebulaFragment = /* glsl */ `
 ${noise}
-varying vec2 vUv; uniform float uTime; uniform float uKind; uniform float uOpacity;
+varying vec2 vUv; uniform float uTime; uniform float uKind; uniform float uOpacity; uniform float uVariant;
 void main(){
  vec2 p=(vUv-.5)*2.; float r=length(p); float angle=atan(p.y,p.x);
  float turbulent=fbm(vec3(p*4.,uTime*.016));
@@ -135,7 +135,8 @@ void main(){
  col=col*gas*1.7+core*vec3(.7,.86,1.)*2.;
  col*=.32;
  if(uKind>0.5){
-   float spiral=angle*2.+log(max(r,.025))*5.5-uTime*.02;
+   float armsCount=2.+mod(uVariant,2.)*2.;
+   float spiral=angle*armsCount+log(max(r,.025))*(5.5+uVariant*.7)-uTime*.02;
    float lanes=pow(.5+.5*sin(spiral+turbulent*2.),3.);
    float envelope=exp(-r*4.2)*(1.-exp(-r*16.));
    float fine=fbm(vec3(p*47.,2.));
@@ -143,7 +144,14 @@ void main(){
    float dustLane=smoothstep(.45,.72,fbm(vec3(p*18.,5.)));
    vec3 disk=vec3(.21,.36,.62)*arms*.8*(1.-dustLane*.7);
    float stars=pow(hash(vec3(floor(p*430.),3.)),70.)*lanes*envelope;
-   col=disk+vec3(.75,.83,1.)*stars*.7+vec3(1.,.69,.35)*exp(-r*24.)*.65;
+   vec3 tint=mix(vec3(.75,.83,1.),vec3(.9,.55,.86),uVariant/3.);
+   col=disk+tint*stars*.95+vec3(1.,.69,.35)*exp(-r*24.);
+   if(uVariant>1.5&&uVariant<2.5){
+     col=vec3(.95,.68,.4)*exp(-r*7.)*.72+vec3(1.,.87,.65)*exp(-r*28.);
+     col+=vec3(.8,.75,.6)*stars*.16;
+   }
+   if(uVariant>2.5)col+=vec3(.12,.28,.55)*exp(-abs(p.y)*18.-abs(p.x)*5.)*.2;
+   col*=1.6;
  }
  float alpha=(1.-smoothstep(.72,1.,r))*uOpacity;
  gl_FragColor=vec4(col,alpha);

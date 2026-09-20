@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mulberry32 } from '../prng.js';
 import { buildProbe } from '../probe.js';
 import { createSupernova } from './supernova.js';
+import { createQuasar } from './quasar.js';
 import { glowTexture, sprite } from '../space.js';
 import {
   worldVertex,
@@ -135,7 +136,7 @@ export function buildWorld(scene, phone) {
     new THREE.PlaneGeometry(1100, 950),
     material(
       nebulaFragment,
-      { uKind: { value: 0 }, uOpacity: { value: 1 } },
+      { uKind: { value: 0 }, uOpacity: { value: 1 }, uVariant: { value: 0 } },
       {
         transparent: true,
         depthWrite: false,
@@ -165,27 +166,10 @@ export function buildWorld(scene, phone) {
     return mesh;
   }
   const blackHole = hole(720, 165, 30, -2410);
-  const companion = hole(300, 360, 90, -2440);
-  const quasar = hole(390, 130, 30, -3050);
-  const jetGroup = new THREE.Group();
-  jetGroup.position.copy(quasar.position);
-  jetGroup.rotation.z = -0.3;
-  const jetTexture = glowTexture([
-    [0, 'rgba(215,239,255,.95)'],
-    [0.08, 'rgba(110,173,255,.48)'],
-    [0.4, 'rgba(42,104,255,.1)'],
-    [1, 'rgba(0,0,0,0)'],
-  ]);
-  for (const sign of [-1, 1]) {
-    const beam = sprite(jetTexture, 1, 0.75, false);
-    beam.scale.set(80, 880, 1);
-    beam.position.y = sign * 390;
-    jetGroup.add(beam);
-    const tip = sprite(blue, 160, 0.55, false);
-    tip.position.y = sign * 760;
-    jetGroup.add(tip);
-  }
-  scene.add(jetGroup);
+  const quasarSystem = createQuasar(phone);
+  const quasar = quasarSystem.group;
+  quasar.position.set(phone ? 75 : 235, 30, -3090);
+  scene.add(quasar);
 
   const galaxies = new THREE.Group();
   scene.add(galaxies);
@@ -195,12 +179,16 @@ export function buildWorld(scene, phone) {
     [-370, 190, -4470, 540, -0.5],
     [560, -180, -4490, 650, 0.8],
     [-150, -80, -4940, 1150, -0.1],
-  ].forEach(([x, y, z, size, angle]) => {
+  ].forEach(([x, y, z, size, angle], variant) => {
     const gal = new THREE.Mesh(
-      new THREE.PlaneGeometry(size, size * 0.72),
+      new THREE.PlaneGeometry(size, size * [0.72, 0.46, 0.95, 0.58][variant]),
       material(
         nebulaFragment,
-        { uKind: { value: 1 }, uOpacity: { value: 0.95 } },
+        {
+          uKind: { value: 1 },
+          uOpacity: { value: 0.95 },
+          uVariant: { value: variant },
+        },
         {
           transparent: true,
           depthWrite: false,
@@ -226,9 +214,8 @@ export function buildWorld(scene, phone) {
     remnant,
     pulsar,
     blackHole,
-    companion,
     quasar,
-    jetGroup,
+    quasarSystem,
     galaxies,
     galaxyMaterials,
     updateTime(time) {
@@ -239,7 +226,7 @@ export function buildWorld(scene, phone) {
     dispose() {
       const geometries = new Set(),
         materials = new Set(),
-        textures = new Set([blue, jetTexture]);
+        textures = new Set([blue]);
       scene.traverse((o) => {
         if (o.geometry) geometries.add(o.geometry);
         if (o.material)

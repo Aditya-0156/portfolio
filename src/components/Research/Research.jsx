@@ -58,7 +58,7 @@ export default function Research({ content }) {
   const active = useRevealOnce(stripRef, { threshold: 0.4, rootMargin: '0px' });
 
   return (
-    <Section id="research" index="05" title={content.title} meta={content.meta} arrival>
+    <Section id="research" index="05" title={content.title}>
       <div ref={stripRef} className="readouts" data-reveal="">
         {content.readouts.map((r) => (
           <Figure key={r.label} {...r} active={active} />

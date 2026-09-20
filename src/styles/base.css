@@ -128,29 +128,15 @@
   /* 4.1 container and grid. The container class is `.wrap` because Tailwind owns `.container`. */
   .wrap { box-sizing: content-box; max-width: 1280px; margin-inline: auto; padding-inline: var(--gutter); }
   .grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: var(--gap); align-items: start; }
-  /* Date column plus body column inside .section__content: cols 4 to 5 and 6 to 12 at desktop, 3 to 4 and 5 to 8 at tablet, stacked on phone. */
+  /* Dates sit above the body so the reading column stays clear of the scene on the right. */
   .split { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3) var(--gap); align-items: start; }
-  @media (min-width: 600px) {
-    .split { grid-template-columns: calc((100% - (var(--content-cols) - 1) * var(--gap)) / var(--content-cols) * 2 + var(--gap)) minmax(0, 1fr); }
-  }
 
-  /* 4.3 section with rail */
+  /* Open sections: one reading column, with the right of the frame reserved for space. */
   .section { position: relative; }
   .section__grid { padding-block: var(--section-pad); }
-  .section__rail { grid-column: 1 / -1; margin-bottom: var(--s-5); }
-  .section__content { grid-column: 1 / -1; will-change: transform, opacity; }
-  .section__index { display: block; color: var(--fg-2); transition: color var(--d-fast) var(--ease-inout); }
-  .section[data-active="true"] .section__index { color: var(--fg-0); }
-  .section__title { margin-top: var(--s-2); }
-  .section__meta { margin-top: var(--s-3); color: var(--fg-2); }
-  .section__meta > li { display: block; }
-  @media (min-width: 600px) {
-    .section__rail { grid-column: 1 / 3; position: sticky; top: 88px; align-self: start; margin-bottom: 0; }
-    .section__content { grid-column: 3 / -1; }
-  }
+  .section__content { width: 100%; max-width: 760px; will-change: transform, opacity; }
   @media (min-width: 900px) {
-    .section__rail { grid-column: 1 / 4; }
-    .section__content { grid-column: 4 / -1; }
+    .section__content { width: 64%; }
   }
 
   /* Entries (Work, Education): hairline top, half of the entry gap above and below. */
@@ -167,10 +153,6 @@
   .daterange__line { display: block; }
   .daterange.entry__date--inline { display: block; margin-bottom: var(--s-2); }
   .daterange.entry__date--stacked { display: none; }
-  @media (min-width: 600px) {
-    .daterange.entry__date--inline { display: none; }
-    .daterange.entry__date--stacked { display: block; }
-  }
 
   /* Rule: 1 px hairline hr. .rule--draw scales from 0 when revealed; .rule--intro runs the intro keyframe. */
   .rule { border: 0; border-top: 1px solid var(--hairline); height: 0; margin: 0; width: 100%; display: block; }
