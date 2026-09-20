@@ -1,5 +1,16 @@
 @layer components {
-  /* The gate is part of the page, not a browser prompt: same surface, same hairlines, same type. */
+  .light-gate-open {
+    overflow: hidden;
+  }
+  .light-gate-open .voyage,
+  .light-gate-open .voyage-scrim,
+  .light-gate-open .voyage-vignette,
+  .light-gate-open .voyage-effects,
+  .light-gate-open .voyage-hud {
+    visibility: hidden;
+  }
+
+  /* The backdrop is opaque from its first frame: no stars or trails leak through. */
   .gate {
     position: fixed;
     inset: 0;
@@ -8,7 +19,10 @@
     align-items: center;
     justify-content: center;
     padding: var(--s-4);
-    background: rgba(5, 6, 10, 0.72);
+    background: #05060a;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    isolation: isolate;
   }
   .gate__panel {
     width: min(52ch, 100%);
@@ -16,24 +30,60 @@
     border: 1px solid var(--hairline-strong);
     border-radius: 2px;
     padding: var(--s-6);
+    max-height: calc(100dvh - 2 * var(--s-4));
+    overflow-y: auto;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
   }
-  .gate__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
-  .gate__count { flex: none; }
-  .gate__panel .rule { margin: var(--s-4) 0 var(--s-5); }
-  .gate__title { max-width: 24ch; }
-  .gate__body { margin-top: var(--s-3); color: var(--fg-1); max-width: 46ch; }
-  .gate__actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
+  .gate__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-4);
+  }
+  .gate__count {
+    flex: none;
+  }
+  .gate__panel .rule {
+    margin: var(--s-4) 0 var(--s-5);
+  }
+  .gate__title {
+    max-width: 24ch;
+  }
+  .gate__body {
+    margin-top: var(--s-3);
+    color: var(--fg-1);
+    max-width: 46ch;
+  }
+  .gate__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-6);
+  }
 
   @media (prefers-reduced-motion: no-preference) {
-    .gate { animation: gate-in 200ms var(--ease-out) both; }
-    .gate__panel { animation: gate-rise 260ms var(--ease-out) both; }
+    .gate__panel {
+      animation: gate-rise 260ms var(--ease-out) both;
+    }
   }
-  @keyframes gate-in { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes gate-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes gate-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 
   @media (max-width: 599px) {
-    .gate__panel { padding: var(--s-5); }
-    .gate__actions > .btn { width: 100%; justify-content: center; }
+    .gate__panel {
+      padding: var(--s-5);
+    }
+    .gate__actions > .btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }

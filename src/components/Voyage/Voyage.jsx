@@ -4,6 +4,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { phenomenaShader } from '../../lib/voyage/phenomenaPass.js';
 import { buildWorld } from '../../lib/voyage/world.js';
 import { clamp01, band } from '../../lib/space.js';
 import { scrollToHash } from '../../lib/motion.js';
@@ -12,9 +14,16 @@ import { useNova } from '../../hooks/useNova.js';
 import { useRipple } from '../../hooks/useRipple.js';
 
 const FORGE =
-  'h1, h2, h3, h4, p, li, figcaption, .t-mono, .t-mono-label, .readout__value, .facts__value';
+  '#work h2, #work h3, #work p, #work li, #work .t-mono, #work .t-mono-label, #projects h2, #projects h3, #projects p, #projects .t-mono';
+const MATTER =
+  '#work .entry, #projects .projects__intro, #projects .flagship, #projects .card';
 const RIPPLE =
-  '.entry, .card, .pub, .readout, .flagship, .stack__group, .more__item, .facts__cell';
+  '#research .readout, #research .research__title, #research .research__p, #research .pub, #stack .stack__group';
+const EJECTA = Array.from({ length: 28 }, (_, i) => ({
+  angle: i * 2.399963,
+  reach: 0.72 + ((i * 17) % 29) / 42,
+  depth: 0.85 + ((i * 11) % 23) / 21,
+}));
 const CAMERA = [
   [0, 35, 550],
   [55, 60, 210],
@@ -29,14 +38,15 @@ const CAMERA = [
 export default function Voyage({ reduced, isPhone }) {
   const canvasRef = useRef(null),
     progressRef = useRef(null),
-    toggleRef = useRef(null);
+    toggleRef = useRef(null),
+    effectsRef = useRef(null);
   const [cinema, setCinema] = useState(false);
   const [paused, setPaused] = useState(false);
   const [available, setAvailable] = useState(true);
   const [chapter, setChapter] = useState(0);
   const playback = useRef({ paused: false, cinema: false });
   const engine = useRef({ wake: () => {} });
-  const nova = useNova(!reduced && !paused, FORGE);
+  const nova = useNova(!reduced && !paused, FORGE, MATTER);
   const ripple = useRipple(!reduced && !paused, RIPPLE);
 
   useEffect(() => {
@@ -103,7 +113,11 @@ export default function Voyage({ reduced, isPhone }) {
     composer.addPass(new RenderPass(scene, camera));
     const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.24, 0.35, 0.9);
     composer.addPass(bloom);
+    const phenomena = new ShaderPass(phenomenaShader);
+    composer.addPass(phenomena);
     composer.addPass(new OutputPass());
+    const effects = effectsRef.current;
+    const ejecta = [...effects.querySelectorAll('.voyage-ejecta')];
     const state = {
       raf: 0,
       last: 0,
@@ -116,6 +130,7 @@ export default function Voyage({ reduced, isPhone }) {
       chapter: -1,
       dirty: true,
       lost: false,
+      gateOpen: document.documentElement.classList.contains('light-gate-open'),
       frames: 0,
       totalMs: 0,
       dpr: Math.min(devicePixelRatio || 1, isPhone ? 1.25 : 1.5),
@@ -138,7 +153,7 @@ export default function Voyage({ reduced, isPhone }) {
         b = state.anchors[leg + 1] || 1;
       state.target = clamp01((leg + clamp01((y - a) / Math.max(1, b - a))) / 7);
       state.dirty = true;
-      if (!state.raf && !document.hidden && !state.lost)
+      if (!state.raf && !document.hidden && !state.lost && !state.gateOpen)
         state.raf = requestAnimationFrame(draw);
     };
     const measure = () => {
@@ -198,7 +213,7 @@ export default function Voyage({ reduced, isPhone }) {
 
     function draw(now) {
       state.raf = 0;
-      if (disposed || document.hidden || state.lost) return;
+      if (disposed || document.hidden || state.lost || state.gateOpen) return;
       const dt = Math.min((now - (state.last || now)) / 1000, 0.05);
       state.last = now;
       const still = reduced || playback.current.paused;
@@ -257,19 +272,15 @@ export default function Voyage({ reduced, isPhone }) {
         );
         world.probe.visible = travel < 0.96;
 
-        const eruption = band(travel, 0.24, 0.4);
-        world.nova.visible = travel > 0.15 && travel < 0.44;
-        if (world.nova.visible) {
-          world.blast.advance(eruption);
-          world.star.scale.setScalar(360 + Math.sin(eruption * Math.PI) * 700);
-          world.star.material.opacity = (1 - band(eruption, 0.25, 0.95)) * 0.95;
-          world.novaCloud.material.uniforms.uOpacity.value =
-            Math.sin(eruption * Math.PI) * 0.8;
-          world.novaCloud.quaternion.copy(camera.quaternion);
-        }
-        world.remnant.visible = travel > 0.34 && travel < 0.55;
+        const eruption = band(travel, 0.2, 0.44);
+        const novaEnergy =
+          band(eruption, 0.34, 0.42) * (1 - band(eruption, 0.82, 1));
+        const flash = Math.exp(-Math.pow((eruption - 0.377) / 0.027, 2));
+        world.nova.visible = travel > 0.16 && travel < 0.48;
+        if (world.nova.visible) world.supernova.update(eruption, time, camera);
+        world.remnant.visible = travel > 0.42 && travel < 0.55;
         world.remnant.material.uniforms.uOpacity.value =
-          band(travel, 0.34, 0.4) * (1 - band(travel, 0.49, 0.55));
+          band(travel, 0.42, 0.46) * (1 - band(travel, 0.49, 0.55));
         world.pulsar.visible = world.remnant.visible;
         world.remnant.quaternion.copy(camera.quaternion);
         world.remnant.rotateZ(time * 0.006);
@@ -296,34 +307,114 @@ export default function Voyage({ reduced, isPhone }) {
         world.galaxyMaterials.forEach((m) => {
           m.uniforms.uOpacity.value = band(travel, 0.77, 0.82) * 0.95;
         });
-        bloom.strength = 0.14 + Math.sin(eruption * Math.PI) * 0.14;
-
+        bloom.strength = 0.2 + novaEnergy * 0.12 + flash * 0.18;
+        phenomena.enabled = false;
+        effects.style.setProperty('--event-alpha', '0');
+        effects.dataset.event = 'none';
+        const mergerProgress = band(travel, 0.53, 0.675);
+        const wave = Math.sin(mergerProgress * Math.PI);
+        const phase = mergerProgress * 18 - time * 1.2;
+        let sourceX = 0,
+          sourceY = 0,
+          frontRadius = 0;
+        if (eruption > 0 && eruption < 1) {
+          projected.copy(world.nova.position).project(camera);
+          sourceX = THREE.MathUtils.clamp(
+            (projected.x * 0.5 + 0.5) * state.width,
+            -state.width * 0.3,
+            state.width * 1.3,
+          );
+          sourceY = THREE.MathUtils.clamp(
+            (-projected.y * 0.5 + 0.5) * state.height,
+            -state.height * 0.3,
+            state.height * 1.3,
+          );
+          const distance = Math.max(
+            240,
+            Math.abs(camera.position.z - world.nova.position.z),
+          );
+          const projectionScale =
+            state.height /
+            (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance);
+          frontRadius =
+            world.supernova.screenRadius(eruption) * projectionScale;
+          if (!still) {
+            effects.dataset.event = 'supernova';
+            effects.style.setProperty('--event-x', `${sourceX.toFixed(1)}px`);
+            effects.style.setProperty('--event-y', `${sourceY.toFixed(1)}px`);
+            effects.style.setProperty(
+              '--event-radius',
+              `${frontRadius.toFixed(1)}px`,
+            );
+            effects.style.setProperty(
+              '--event-alpha',
+              String(novaEnergy * 0.65),
+            );
+            phenomena.enabled = novaEnergy > 0.01;
+            phenomena.uniforms.uKind.value = 1;
+            phenomena.uniforms.uCenter.value.set(
+              sourceX / state.width,
+              1 - sourceY / state.height,
+            );
+            phenomena.uniforms.uRadius.value = frontRadius / state.height;
+            phenomena.uniforms.uEnergy.value = novaEnergy;
+          }
+        }
+        const particlesActive = !still && novaEnergy > 0.01;
+        ejecta.forEach((particle, i) => {
+          if (!particlesActive) {
+            particle.style.opacity = '0';
+            return;
+          }
+          const seed = EJECTA[i];
+          const a = seed.angle + time * 0.014;
+          const radius = frontRadius * seed.reach;
+          particle.style.transform = `translate3d(${(sourceX + Math.cos(a) * radius).toFixed(1)}px,${(sourceY + Math.sin(a) * radius * 0.76).toFixed(1)}px,0) scale(${seed.depth})`;
+          particle.style.opacity = String(novaEnergy * 0.68);
+        });
         if (
           !still &&
           !playback.current.cinema &&
           eruption > 0 &&
           eruption < 1
         ) {
-          projected.copy(world.nova.position).project(camera);
           nova.current.report({
             active: true,
-            x: (projected.x * 0.5 + 0.5) * state.width,
-            y: (-projected.y * 0.5 + 0.5) * state.height,
-            radius: Math.pow(eruption, 0.6) * state.height * 1.7,
+            x: sourceX,
+            y: sourceY,
+            radius: frontRadius,
+            progress: eruption,
+            energy: novaEnergy,
+            time,
           });
         } else nova.current.report({ active: false });
-        const wave = Math.sin(band(travel, 0.53, 0.66) * Math.PI);
-        if (!still && !playback.current.cinema && wave > 0.01) {
+        if (!still && wave > 0.01) {
           projected.copy(world.blackHole.position).project(camera);
-          ripple.current.report({
-            active: true,
-            x: (projected.x * 0.5 + 0.5) * state.width,
-            y: (-projected.y * 0.5 + 0.5) * state.height,
-            amplitude: wave * (isPhone ? 4 : 7),
-            wavelength: 190,
-            phase: travel * 90 - time * 1.4,
-          });
+          const x = (projected.x * 0.5 + 0.5) * state.width,
+            y = (-projected.y * 0.5 + 0.5) * state.height;
+          phenomena.enabled = true;
+          phenomena.uniforms.uKind.value = 2;
+          phenomena.uniforms.uCenter.value.set(
+            x / state.width,
+            1 - y / state.height,
+          );
+          phenomena.uniforms.uEnergy.value = wave;
+          phenomena.uniforms.uPhase.value = phase;
+          if (!playback.current.cinema) {
+            ripple.current.report({
+              active: true,
+              x,
+              y,
+              amplitude: wave * (isPhone ? 11 : 22),
+              wavelength: state.height / 29,
+              phase,
+              progress: mergerProgress,
+              energy: wave,
+              time,
+            });
+          } else ripple.current.report({ active: false });
         } else ripple.current.report({ active: false });
+        phenomena.uniforms.uAspect.value = camera.aspect;
         composer.render();
         if (progressRef.current)
           progressRef.current.style.setProperty('--travel', travel);
@@ -338,7 +429,7 @@ export default function Voyage({ reduced, isPhone }) {
           state.frames++;
           state.totalMs += dt * 1000;
           if (state.frames === 120) {
-            if (state.totalMs / 120 > 27 && state.dpr > 0.8) {
+            if (state.totalMs / 120 > 22 && state.dpr > 0.8) {
               state.dpr = Math.max(0.8, state.dpr - 0.25);
               resize();
             }
@@ -352,21 +443,40 @@ export default function Voyage({ reduced, isPhone }) {
     engineApi.wake = () => {
       state.dirty = true;
       state.last = 0;
-      if (!state.raf && !document.hidden)
+      if (!state.raf && !document.hidden && !state.gateOpen)
         state.raf = requestAnimationFrame(draw);
     };
     const visibility = () => {
       cancelAnimationFrame(state.raf);
       state.last = 0;
-      if (!document.hidden) {
+      if (!document.hidden && !state.gateOpen) {
         state.dirty = true;
         state.raf = requestAnimationFrame(draw);
       }
     };
+    const lightGate = (event) => {
+      state.gateOpen = Boolean(event.detail?.open);
+      cancelAnimationFrame(state.raf);
+      state.raf = 0;
+      state.last = 0;
+      if (state.gateOpen) {
+        nova.current.report({ active: false });
+        ripple.current.report({ active: false });
+        effects.style.setProperty('--event-alpha', '0');
+      } else engineApi.wake();
+    };
+    window.addEventListener('lightgate:change', lightGate);
     const contextLost = (e) => {
       e.preventDefault();
       state.lost = true;
       cancelAnimationFrame(state.raf);
+      state.raf = 0;
+      nova.current.report({ active: false });
+      ripple.current.report({ active: false });
+      effects.style.setProperty('--event-alpha', '0');
+      ejecta.forEach((particle) => {
+        particle.style.opacity = '0';
+      });
       setCinema(false);
       setAvailable(false);
     };
@@ -386,6 +496,7 @@ export default function Voyage({ reduced, isPhone }) {
       cancelAnimationFrame(state.raf);
       observer.disconnect();
       window.removeEventListener('resize', resize);
+      window.removeEventListener('lightgate:change', lightGate);
       window.removeEventListener('scroll', readScroll);
       window.removeEventListener('pointermove', move);
       document.removeEventListener('pointerleave', resetPointer);
@@ -408,6 +519,12 @@ export default function Voyage({ reduced, isPhone }) {
       <canvas ref={canvasRef} className="voyage" aria-hidden="true" />
       <div className="voyage-scrim" aria-hidden="true" />
       <div className="voyage-vignette" aria-hidden="true" />
+      <div className="voyage-effects" ref={effectsRef} aria-hidden="true">
+        <div className="voyage-front" />
+        {EJECTA.map((_, i) => (
+          <i className="voyage-ejecta" key={i} />
+        ))}
+      </div>
       {available ? (
         <aside
           className="voyage-hud"

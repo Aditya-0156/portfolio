@@ -24,6 +24,7 @@ export const voyage = {
     {
       id: 'work',
       name: 'Stellar forge',
+      arrival: 'Out of the fire.',
       place: 'The death of a star',
       note: 'An ending that becomes the beginning of everything.',
     },
@@ -36,6 +37,7 @@ export const voyage = {
     {
       id: 'research',
       name: 'Event horizon',
+      arrival: 'Nothing stays still.',
       place: 'Where light bends',
       note: 'At the edge of what we can know.',
     },

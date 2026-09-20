@@ -4,6 +4,7 @@
 @import "./motion.css";
 @import "./components.css";
 @import "../components/Voyage/voyage.css";
+@import "../components/Voyage/matter.css";
 @import "../components/lightgate.css";
 @theme inline {
   --color-bg-0: var(--bg-0); --color-bg-1: var(--bg-1); --color-bg-2: var(--bg-2); --color-bg-3: var(--bg-3);

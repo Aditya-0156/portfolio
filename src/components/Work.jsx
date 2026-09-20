@@ -3,7 +3,7 @@ import ExperienceEntry from './ExperienceEntry.jsx';
 
 export default function Work({ content }) {
   return (
-    <Section id="work" index="03" title={content.title}>
+    <Section id="work" index="03" title={content.title} arrival>
       {content.roles.map((r) => (
         <ExperienceEntry
           key={r.org + r.start}

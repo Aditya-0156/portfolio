@@ -12,16 +12,16 @@ The scene is generated at runtime without downloaded models or image textures:
 
 - A gas giant with turbulent cloud bands, directional lighting, fine ring structure and a planetary shadow across the rings.
 - Layered stellar depth and a procedural sky with cool dust and warm gas.
-- A supernova with GPU driven ejecta and a nebular remnant.
+- A collapsing star, a white-hot eruption, expanding three-dimensional gas shells, branching filaments, clumps and thousands of GPU driven ejecta particles.
 - Curved ray integration around the black hole, with an accretion disk, lensed secondary images and asymmetric disk brightness. This is an artistic approximation, not a scientific simulation.
 - Quasar jets and procedural spiral galaxies with dust lanes and embedded stars.
 - Filmic tone mapping and restrained bloom.
 
-The supernova also paints the text in its wake. The merger sends a travelling displacement through the page components. Reading surfaces protect text from bright scenery.
+The supernova's projected shock front also drives the page: work gathers toward the explosion, emerges through its shell, and cools through gold and copper. Each content block settles even if scrolling stops. The merger shares its wave phase with the document, pulling, stretching and releasing nearby research. Feathered shadows keep the copy readable without enclosing it in opaque panels. Work and Research have short arrival compositions that give their events room to unfold.
 
 **View voyage** hides the portfolio and reveals full scene compositions with chapter captions. Scroll or use the chapter rail to travel. **Back to portfolio** or Escape restores the page and keyboard access. The pause control stops continuous canvas rendering while leaving scrolling available.
 
-The site intentionally stays dark. The existing light mode button opens the LightGate interaction.
+The site intentionally stays dark. The light mode button opens three increasingly persistent, physics-inspired questions from mission control. Continuing through the final question opens a related Google search in the same tab. Its opaque dialog hides all luminous layers, suspends the renderer, and supports keyboard focus, Escape and cancellation.
 
 ## Stack
 
@@ -58,7 +58,7 @@ npm run lint:contrast
 npm run test:e2e
 ```
 
-The browser suite uses locally installed Google Chrome. It checks every chapter for runtime and shader errors, pause and resume using actual WebGL draw counts, reduced motion, mobile overflow and navigation, the resume link, missing WebGL, and GPU context loss.
+The browser suite uses locally installed Google Chrome. It checks every chapter for runtime and shader errors, pause and resume using actual WebGL draw counts, reduced motion, mobile overflow and navigation, the resume link, missing WebGL, and GPU context loss. It also verifies the content's launch and settling, actual gravity transforms, and the light dialog's questions, focus, navigation, opaque backdrop and rendering suspension.
 
 To exercise a production preview or the deployed site:
 
@@ -72,18 +72,21 @@ Screenshots, browser traces and local visual experiments are ignored by Git.
 
 Animation uses elapsed time rather than a fixed per-frame interpolation factor. Phone rendering starts with fewer stars and explosion particles and a lower pixel ratio. Sustained slow frames reduce rendering resolution further. The explosion expands in a vertex shader instead of rewriting particle positions on the CPU.
 
-The animation loop stops when the tab is hidden. Pause and reduced motion render only when scrolling, resizing or changing a relevant control. Reduced motion also disables the text forge, layout ripple, smooth scroll and animated reveals. Without WebGL, portfolio content and links remain available. Losing a graphics context exits voyage mode so content cannot remain hidden.
+The animation loop stops when the tab is hidden or the light dialog is open. Pause and reduced motion render only when scrolling, resizing or changing a relevant control. Reduced motion also disables the text forge, layout ripple, smooth scroll and animated reveals. Without WebGL, portfolio content and links remain available. Losing a graphics context clears the content effects and exits voyage mode so content cannot remain hidden.
 
-Performance depends on the device, viewport and GPU. Local desktop Chrome samples at 1440 × 1000 reached approximately 60 fps; this is not a claim about all phones or browsers.
+Performance depends on the device, viewport and GPU. Phone viewport emulation does not replace testing on physical phones.
 
 ## Content and implementation
 
 Portfolio copy lives in `src/content`. Journey labels and captions live in `src/content/voyage.js`. Career facts and the resume were preserved during the visual rebuild.
 
 - `src/components/Voyage/Voyage.jsx`: scene lifecycle, camera path, chapter mapping, controls and motion preferences.
-- `src/lib/voyage/world.js`: scene construction and GPU explosion geometry.
+- `src/lib/voyage/world.js`: scene construction.
+- `src/lib/voyage/supernova.js`: three-dimensional star, explosion geometry and emission shaders.
+- `src/lib/voyage/phenomenaPass.js`: refraction synchronized with the shock front and gravity wave.
 - `src/lib/voyage/shaders.js`: procedural sky, planet, rings, black hole, nebulae and galaxies.
 - `src/lib/probe.js`: Voyager geometry.
 - `src/hooks/useNova.js` and `src/hooks/useRipple.js`: effects that reach into the document.
+- `src/content/lightgate.js`: the light dialog's questions and destination.
 
 The site was built with AI assistance using Claude Code and Codex.

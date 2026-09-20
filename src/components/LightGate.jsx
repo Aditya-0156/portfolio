@@ -1,116 +1,159 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
 import Mono from './Mono.jsx';
+import { lightGate } from '../content/lightgate.js';
 import './lightgate.css';
 
-// Three attempts, each with a real reason the sky is black. Say no at any point and it closes.
-// Say yes three times and the argument is escalated to a higher authority.
-const STEPS = [
-  {
-    label: 'Light mode request',
-    title: 'Are you sure?',
-    body: 'This site is a voyage through deep space. In light mode it would be a voyage through a well lit office.',
-    no: 'Fair enough, stay dark',
-    yes: 'I am sure',
-  },
-  {
-    label: 'Light mode request, second attempt',
-    title: 'Space is dark.',
-    body: 'The cosmic microwave background sits at 2.7 kelvin. That is the temperature of the lights being off, everywhere, since the beginning.',
-    no: 'Alright, stay dark',
-    yes: 'Still sure',
-  },
-  {
-    label: 'Light mode request, third attempt',
-    title: 'Olbers had a paradox about this.',
-    body: 'If the universe were infinite and eternal, every line of sight would end on a star and the whole sky would be white. It is not white. The darkness is the evidence.',
-    no: 'Okay, you win',
-    yes: 'I still want light mode',
-  },
-];
-
-const VERDICT = 'https://www.google.com/search?q=is+space+light+or+dark';
-
-/**
- * The light mode gate. The toggle stays where it is, but asking for light opens this instead of
- * switching the theme, and the argument escalates. It is a dialog inside the page, themed like
- * everything else, not a browser prompt.
- */
 export default function LightGate({ open, onClose, returnFocusTo }) {
   const [step, setStep] = useState(0);
-  const panelRef = useRef(null);
+  const overlayRef = useRef(null);
   const firstRef = useRef(null);
   const lastRef = useRef(null);
 
   const close = useCallback(() => {
     setStep(0);
     onClose();
-    const btn = returnFocusTo && returnFocusTo.current;
-    if (btn) btn.focus();
-  }, [onClose, returnFocusTo]);
+  }, [onClose]);
+
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const trigger = returnFocusTo?.current || document.activeElement;
+    // The dialog lives outside the app so it can keep focus while the app is inert.
+    const background = [...document.body.children]
+      .filter(
+        (element) =>
+          element instanceof HTMLElement && element !== overlayRef.current,
+      )
+      .map((element) => ({ element, inert: element.inert }));
+    background.forEach(({ element }) => {
+      element.inert = true;
+    });
+    document.documentElement.classList.add('light-gate-open');
+    window.dispatchEvent(
+      new CustomEvent('lightgate:change', { detail: { open: true } }),
+    );
+    firstRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      background.forEach(({ element, inert }) => {
+        element.inert = inert;
+      });
+      document.documentElement.classList.remove('light-gate-open');
+      window.dispatchEvent(
+        new CustomEvent('lightgate:change', { detail: { open: false } }),
+      );
+      if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+    };
+  }, [open, returnFocusTo]);
 
   useEffect(() => {
     if (!open) return undefined;
-    const id = requestAnimationFrame(() => firstRef.current && firstRef.current.focus());
     const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
       if (e.key !== 'Tab') return;
       // Two controls, so the trap is just a swap between them.
       const first = firstRef.current;
       const last = lastRef.current;
       if (!first || !last) return;
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', onKey);
     return () => {
-      cancelAnimationFrame(id);
       document.removeEventListener('keydown', onKey);
     };
   }, [open, close]);
 
   if (!open) return null;
 
-  const s = STEPS[step];
-  const last = step === STEPS.length - 1;
+  const s = lightGate.steps[step];
+  const last = step === lightGate.steps.length - 1;
 
   const onYes = () => {
-    if (last) window.location.href = VERDICT;
-    else setStep((n) => n + 1);
+    if (last) window.location.assign(lightGate.searchUrl);
+    else {
+      setStep((n) => n + 1);
+      firstRef.current?.focus({ preventScroll: true });
+    }
   };
 
-  return (
-    <div className="gate" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}>
+  return createPortal(
+    <div
+      ref={overlayRef}
+      className="gate"
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        close();
+      }}
+    >
       <div
         className="gate__panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="gate-title"
         aria-describedby="gate-body"
-        ref={panelRef}
         data-surface
       >
         <div className="gate__head">
-          <Mono label dim>{s.label}</Mono>
-          <Mono label dim className="gate__count">{step + 1} / {STEPS.length}</Mono>
+          <Mono label dim>
+            {s.label}
+          </Mono>
+          <Mono label dim className="gate__count">
+            {step + 1} / {lightGate.steps.length}
+          </Mono>
         </div>
         <hr className="rule" aria-hidden="true" />
-        <h2 id="gate-title" className="t-h3 gate__title">{s.title}</h2>
-        <p id="gate-body" className="t-body gate__body">{s.body}</p>
+        <div aria-live="polite" aria-atomic="true">
+          <h2 id="gate-title" className="t-h3 gate__title">
+            {s.title}
+          </h2>
+          <p id="gate-body" className="t-body gate__body">
+            {s.body}
+          </p>
+        </div>
         <div className="gate__actions">
-          <button ref={firstRef} type="button" className="btn btn--primary" onClick={close}>
+          <button
+            ref={firstRef}
+            type="button"
+            className="btn btn--primary"
+            onClick={close}
+          >
             <span className="btn__label">{s.no}</span>
           </button>
-          <button ref={lastRef} type="button" className="btn btn--bordered" onClick={onYes}>
+          <button
+            ref={lastRef}
+            type="button"
+            className="btn btn--bordered"
+            onClick={onYes}
+          >
             <span className="btn__label">{s.yes}</span>
             {last && (
-              <>
-                <span className="glyph glyph--external" aria-hidden="true">{'↗'}</span>
-                <span className="visually-hidden"> (searches the web for whether space is light or dark)</span>
-              </>
+              <span className="visually-hidden">
+                {' '}
+                ({lightGate.searchDescription})
+              </span>
             )}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mulberry32 } from '../prng.js';
 import { buildProbe } from '../probe.js';
+import { createSupernova } from './supernova.js';
 import { glowTexture, sprite } from '../space.js';
 import {
   worldVertex,
@@ -119,40 +120,16 @@ export function buildWorld(scene, phone) {
   rim.position.set(350, -100, -600);
   scene.add(rim);
 
-  const hot = glowTexture([
-    [0, 'rgba(255,250,229,1)'],
-    [0.06, 'rgba(255,224,164,.95)'],
-    [0.19, 'rgba(255,155,62,.35)'],
-    [0.5, 'rgba(211,66,13,.09)'],
-    [1, 'rgba(0,0,0,0)'],
-  ]);
   const blue = glowTexture([
     [0, 'rgba(235,249,255,1)'],
     [0.045, 'rgba(151,208,255,.9)'],
     [0.2, 'rgba(72,139,255,.18)'],
     [1, 'rgba(0,0,0,0)'],
   ]);
-  const nova = new THREE.Group();
+  const supernova = createSupernova(phone);
+  const nova = supernova.group;
   nova.position.set(phone ? 35 : 170, 25, -1050);
   scene.add(nova);
-  const star = sprite(hot, 520, 1, false);
-  nova.add(star);
-  const blast = buildExplosion(phone ? 3500 : 10000);
-  nova.add(blast.mesh);
-  const novaCloud = new THREE.Mesh(
-    new THREE.PlaneGeometry(850, 850),
-    material(
-      nebulaFragment,
-      { uKind: { value: 0 }, uOpacity: { value: 0 } },
-      {
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      },
-    ),
-  );
-  nova.add(novaCloud);
-  animated.push(novaCloud.material);
 
   const remnant = new THREE.Mesh(
     new THREE.PlaneGeometry(1100, 950),
@@ -245,9 +222,7 @@ export function buildWorld(scene, phone) {
     rings,
     probe,
     nova,
-    star,
-    blast,
-    novaCloud,
+    supernova,
     remnant,
     pulsar,
     blackHole,
@@ -264,7 +239,7 @@ export function buildWorld(scene, phone) {
     dispose() {
       const geometries = new Set(),
         materials = new Set(),
-        textures = new Set([hot, blue, jetTexture]);
+        textures = new Set([blue, jetTexture]);
       scene.traverse((o) => {
         if (o.geometry) geometries.add(o.geometry);
         if (o.material)
@@ -278,54 +253,6 @@ export function buildWorld(scene, phone) {
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());
-    },
-  };
-}
-
-/** Expansion happens in the vertex shader; scrolling never rewrites thousands of vertices. */
-function buildExplosion(count) {
-  const random = mulberry32(118);
-  const positions = new Float32Array(count * 3),
-    speeds = new Float32Array(count),
-    colors = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    const a = random() * Math.PI * 2,
-      z = random() * 2 - 1,
-      ring = Math.sqrt(1 - z * z),
-      speed = 0.35 + random() * 0.85;
-    positions.set([ring * Math.cos(a), z * 0.76, ring * Math.sin(a)], i * 3);
-    speeds[i] = speed;
-    const warm = random();
-    colors.set([1, 0.35 + warm * 0.55, 0.13 + warm * 0.62], i * 3);
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  const mat = new THREE.ShaderMaterial({
-    uniforms: { uExpansion: { value: 0 } },
-    vertexColors: true,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: `attribute float aSpeed; uniform float uExpansion; varying vec3 vColor; varying float vAlpha;
-      void main(){vec3 p=position*pow(uExpansion,.6)*650.*aSpeed;
-      vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
-      gl_PointSize=clamp((1.+uExpansion*2.)*400./max(80.,-mv.z),.8,4.);
-      vColor=color;vAlpha=min(1.,uExpansion*7.)*clamp((1.-uExpansion)*2.,0.,1.);}`,
-    fragmentShader: `varying vec3 vColor; varying float vAlpha; void main(){float r=length(gl_PointCoord-.5)*2.;
-      gl_FragColor=vec4(vColor,exp(-r*r*3.)*(1.-smoothstep(.6,1.,r))*vAlpha);
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-    }`,
-  });
-  const mesh = new THREE.Points(geometry, mat);
-  mesh.frustumCulled = false;
-  return {
-    mesh,
-    advance(u) {
-      mat.uniforms.uExpansion.value = u;
-      mesh.visible = u > 0 && u < 1;
     },
   };
 }

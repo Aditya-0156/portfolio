@@ -4,16 +4,30 @@ import Mono from './Mono.jsx';
 import { useActiveSection } from '../hooks/useActiveSection.js';
 import { useReveal } from '../hooks/useReveal.js';
 import { useSectionCamera } from '../hooks/useSectionCamera.js';
+import { voyage } from '../content/voyage.js';
 
 /**
  * A ruled section with the sticky mono rail: index label, h2 title, up to three meta lines.
  * Children render in the content column (cols 4 to 12 at desktop). Every [data-reveal]
  * descendant is revealed on scroll by useReveal.
  */
-export default function Section({ id, index, title, meta = [], children, className = '', contentClassName = '', rule = true }) {
+export default function Section({
+  id,
+  index,
+  title,
+  meta = [],
+  children,
+  className = '',
+  contentClassName = '',
+  rule = true,
+  arrival = false,
+}) {
   const ref = useRef(null);
   const active = useActiveSection() === id;
   const titleId = `${id}-title`;
+  const station = arrival
+    ? voyage.chapters.find((chapter) => chapter.id === id)
+    : null;
   useReveal(ref);
   useSectionCamera(ref);
   return (
@@ -26,6 +40,18 @@ export default function Section({ id, index, title, meta = [], children, classNa
       tabIndex={-1}
     >
       {rule && <Rule />}
+      {station && (
+        <div className="section__arrival wrap" aria-hidden="true">
+          <span className="arrival__index t-mono-label">
+            {index} / {station.name}
+          </span>
+          <p className="arrival__line">{station.arrival}</p>
+          <span className="arrival__cue t-mono-label">
+            {voyage.hint}
+            <span>↓</span>
+          </span>
+        </div>
+      )}
       <div className="wrap">
         <div className="grid section__grid">
           <header className="section__rail">
@@ -47,7 +73,9 @@ export default function Section({ id, index, title, meta = [], children, classNa
               </ul>
             )}
           </header>
-          <div className={`section__content ${contentClassName}`.trim()}>{children}</div>
+          <div className={`section__content ${contentClassName}`.trim()}>
+            {children}
+          </div>
         </div>
       </div>
     </section>
