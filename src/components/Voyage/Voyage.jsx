@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { buildProbe } from '../../lib/probe.js';
 import { createBlackHole } from '../../lib/blackhole.js';
 import {
-  lerp, clamp01, band, peak, glowTexture, ringTexture, sprite, points,
+  lerp, clamp01, smooth, band, peak, glowTexture, ringTexture, sprite, points,
   starfield, debrisShell, spiralGalaxy, jet, gasGiant,
 } from '../../lib/space.js';
 import { useNova } from '../../hooks/useNova.js';
@@ -58,7 +58,22 @@ const P_GIANT = new THREE.Vector3(295, -50, -600);
 const P_NOVA = new THREE.Vector3(150, 26, -1160);
 const P_REMNANT = new THREE.Vector3(215, 18, -1830);
 const P_MERGER = new THREE.Vector3(225, -18, -2600);
-const P_QUASAR = new THREE.Vector3(255, 44, -3290);
+const P_QUASAR = new THREE.Vector3(265, 46, -3450);
+
+// The probe's flight plan. At each station it holds a different part of the frame and turns to
+// face whatever is out there, the way a shot in a film is staged rather than letting the craft
+// drift. `side` and `lift` are fractions of the visible frame at that distance, so the staging
+// holds on a phone as well as on a wide screen; `lead` is how far ahead of the camera it rides.
+const FLIGHT = [
+  { side: 0.55, lift: -0.02, lead: 150, watch: null },      // 01 launch, running clear of home
+  { side: -0.42, lift: 0.20, lead: 125, watch: 'giant' },   // 02 crossed left, looking back at the planet
+  { side: 0.62, lift: -0.16, lead: 175, watch: 'nova' },    // 03 out right, facing the star as it goes
+  { side: -0.35, lift: 0.28, lead: 110, watch: 'remnant' }, // 04 back through the remains
+  { side: 0.60, lift: -0.08, lead: 190, watch: 'merger' },  // 05 right again, turned to the merger
+  { side: -0.45, lift: 0.18, lead: 135, watch: 'quasar' },  // 06 left, jets across the frame
+  { side: 0.40, lift: 0.30, lead: 235, watch: null },       // 07 drifting out toward the cluster
+  { side: -0.25, lift: 0.40, lead: 310, watch: null },      // 08 small, far, still going
+];
 
 /**
  * The voyage. A fixed canvas behind the whole page: the probe leaves at the top, and the reader
@@ -336,6 +351,13 @@ export default function Voyage({ reduced, isPhone }) {
 
     const look = new THREE.Vector3();
     const clock = new THREE.Clock();
+    // Scratch objects for aiming the probe, allocated once.
+    const probeAim = new THREE.Vector3();
+    const probeQuat = new THREE.Quaternion();
+    const probeTarget = new THREE.Matrix4();
+    const UP = new THREE.Vector3(0, 1, 0);
+    const TIP = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+    const WATCH = { giant: P_GIANT, nova: P_NOVA, remnant: P_REMNANT, merger: P_MERGER, quasar: P_QUASAR };
 
     // Sprite opacity is written all over the frame; this is the one gate that mutes them on paper.
     const glow = (spr, value) => { spr.material.opacity = spr.userData.muted ? 0 : value; };
@@ -355,13 +377,43 @@ export default function Voyage({ reduced, isPhone }) {
       camera.lookAt(look);
       camera.rotation.z = Math.sin(t * 4.8) * 0.028;
 
-      // The probe rides ahead and to the right, turning slowly as it travels.
-      probe.position.set(sway + 44, 4 + Math.sin(time * 0.35) * 2.5, camZ - 96);
-      probe.rotation.set(
-        0.2 + Math.sin(time * 0.21) * 0.07,
-        time * 0.075 + 0.8,
-        0.16 + Math.cos(time * 0.17) * 0.06,
+      // The probe is staged rather than parked: it crosses the frame between stations and turns
+      // to face whatever is out there, easing between plans so the path is one continuous flight.
+      const f = clamp01(t) * (FLIGHT.length - 1);
+      const fi = Math.min(FLIGHT.length - 2, Math.floor(f));
+      const fm = smooth(clamp01(f - fi));
+      const A = FLIGHT[fi];
+      const B = FLIGHT[fi + 1];
+      const lead = lerp(A.lead, B.lead, fm);
+      // Half the visible frame at the distance the probe is riding, so the staging is the same
+      // shot on any screen.
+      const halfH = lead * Math.tan((camera.fov * Math.PI) / 360);
+      const halfW = halfH * camera.aspect;
+      const side = lerp(A.side, B.side, fm) * halfW;
+      const lift = lerp(A.lift, B.lift, fm) * halfH;
+      probe.position.set(
+        sway + side + Math.sin(time * 0.27) * 4,
+        6 + lift + Math.sin(time * 0.35) * 3,
+        camZ - lead,
       );
+
+      // Face the subject of this leg, and hold a slow roll so it never looks bolted in place.
+      const watch = (fm < 0.5 ? A.watch : B.watch);
+      const subject = watch ? WATCH[watch] : null;
+      if (subject) {
+        probeAim.copy(subject);
+      } else {
+        // Nothing to look at: hold the heading it already has, a little off the flight path.
+        probeAim.set(probe.position.x + side * 0.4, probe.position.y - 12, probe.position.z - 320);
+      }
+      probeTarget.lookAt(probe.position, probeAim, UP);
+      probeQuat.setFromRotationMatrix(probeTarget);
+      // The dish faces along +Y in the model, so tip it onto the line of sight.
+      probeQuat.multiply(TIP);
+      probe.quaternion.slerp(probeQuat, 0.035);
+      probe.rotateY(Math.sin(time * 0.19) * 0.004);
+      probe.rotateZ(Math.sin(time * 0.13) * 0.003);
+
       const probeFade = clamp01(1 - band(t, 0.80, 0.94));
       probe.visible = probeFade > 0.02;
       if (probe.visible) {
@@ -477,8 +529,8 @@ export default function Voyage({ reduced, isPhone }) {
       st.t = 0;
       camera.position.set(0, 16, Z0);
       camera.lookAt(0, 6, Z0 - 320);
-      probe.position.set(44, 4, Z0 - 96);
-      probe.rotation.set(0.2, 0.8, 0.16);
+      probe.position.set(118, 8, Z0 - 150);
+      probe.rotation.set(0.24, 0.7, 0.14);
       blast.advance(0);
       kilonova.advance(0);
       remnant.material.opacity = 0;
