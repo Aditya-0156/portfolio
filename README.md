@@ -1,197 +1,54 @@
-# 🚀 Aditya's Portfolio
+# Portfolio
 
-A stunning, modern portfolio website built with cutting-edge web technologies, featuring 3D animations, glassmorphism effects, and smooth interactions.
+Personal site for Aditya Yadav, Forward Deployment Engineer at Cornerstone OnDemand. One page covering current work, experience, projects, research and contact details.
 
-![Portfolio Preview](https://img.shields.io/badge/Status-Live-success)
-![Tech Stack](https://img.shields.io/badge/Tech-React%20%7C%20Three.js%20%7C%20Tailwind-blue)
+Live at https://aditya-0156.github.io/portfolio/
 
-🌐 **Live Demo**: [https://aditya-0156.github.io/portfolio/](https://aditya-0156.github.io/portfolio/)
+## Design
 
-## ✨ Features
+The site is built as a bench instrument rather than a brochure: one grotesk, one mono, one accent colour, hairline rules, and a sticky mono rail that indexes every section. The masthead is a 2D canvas rendering of a 96-channel C+L band optical comb with one channel marked as a localized soft failure, drawn from the same subject as the research it sits above. It is procedurally generated from a fixed seed and captioned as illustrative. Scrolling collapses it into the first rule of the page.
 
-- **3D Animated Background** - Interactive particle system using Three.js and React Three Fiber
-- **Glassmorphism UI** - Modern frosted-glass card designs throughout
-- **Smooth Animations** - Powered by Framer Motion and GSAP
-- **Fully Responsive** - Optimized for all devices from mobile to desktop
-- **Dynamic Project Showcase** - Expandable project cards with detailed information
-- **Interactive Skills Section** - Animated progress bars and category filtering
-- **Contact Form** - Integrated contact section with social links
-- **Dark Theme** - Eye-friendly dark mode with vibrant accent colors
+Both themes are first class. Dark is the default, light is a true light theme, and the choice is stored. Every text pair clears WCAG AA in both, checked by a script that runs before each build.
 
-## 🎨 Design Highlights
+## Stack
 
-- **Color Palette**:
-  - Primary: Warm Gold (#fbbf24)
-  - Accents: Cyan (#00f5ff), Purple (#a855f7), Pink (#ec4899)
-  - Background: Deep Dark (#1a1a1a)
-- **Typography**: Inter, Space Grotesk, JetBrains Mono
-- **Effects**: Glassmorphism, floating animations, gradient text, glow effects
+- React 19 and Vite 7
+- Tailwind CSS v4, configured in CSS
+- GSAP with ScrollTrigger for the intro and scroll reveals, Lenis for smooth scrolling
+- No UI framework, no icon library, no 3D library
 
-## 🛠️ Tech Stack
-
-### Core
-- **React 19** - UI library
-- **Vite** - Build tool and dev server
-- **Tailwind CSS v4** - Utility-first CSS framework
-
-### 3D & Animations
-- **Three.js** - 3D graphics library
-- **@react-three/fiber** - React renderer for Three.js
-- **@react-three/drei** - Useful helpers for React Three Fiber
-- **Framer Motion** - React animation library
-- **GSAP** - Professional-grade animation platform
-
-### UI Components
-- **Lucide React** - Beautiful icons
-- **React Icons** - Icon library
-
-## 📂 Project Structure
+## Run locally
 
 ```
-portfolio/
-├── src/
-│   ├── components/
-│   │   ├── Background/        # 3D animated background
-│   │   ├── Navbar/            # Navigation component
-│   │   ├── Hero/              # Hero section
-│   │   ├── Projects/          # Project showcase
-│   │   ├── Skills/            # Skills section
-│   │   └── Contact/           # Contact form
-│   ├── data/
-│   │   ├── projectsData.js    # Project information
-│   │   └── skillsData.js      # Skills and highlights
-│   ├── App.jsx                # Main app component
-│   ├── index.css              # Global styles
-│   └── main.jsx               # Entry point
-├── public/                     # Static assets
-└── dist/                       # Build output
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 16+ installed
-- npm or yarn package manager
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/Aditya-0156/portfolio.git
-cd portfolio
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-4. Open your browser to `http://localhost:5173`
+## Build and deploy
 
-### Building for Production
-
-```bash
-npm run build
 ```
-
-### Deploying to GitHub Pages
-
-```bash
+npm run build
 npm run deploy
 ```
 
-## 📝 Adding New Projects
+`npm run build` runs the contrast check first. `npm run deploy` publishes `dist` to GitHub Pages.
 
-To add a new project to your portfolio:
+## Checks
 
-1. Open `src/data/projectsData.js`
-2. Add a new project object to the `projects` array:
-
-```javascript
-{
-  id: 2,
-  title: "Your Project Name",
-  subtitle: "Brief tagline",
-  description: "Short description for card view",
-  longDescription: "Detailed description",
-  technologies: [
-    { name: "Tech1", icon: "🔧", color: "#color" },
-    // ...
-  ],
-  features: [
-    "Feature 1",
-    "Feature 2",
-  ],
-  github: "https://github.com/yourusername/project",
-  demo: "https://project-demo.com",
-  category: "AI/ML", // or "Web Development", "Full-Stack", etc.
-  date: "2025-02",
-  featured: false,
-  stats: {
-    stars: "⭐",
-    tech: "X Technologies",
-    type: "Frontend/Backend/Full-Stack"
-  }
-}
+```
+npm run lint            # eslint
+npm run lint:contrast   # WCAG AA contrast of every token pair, both themes
+node scripts/spectrum.test.mjs
 ```
 
-## 🎨 Customization
+## Content
 
-### Colors
-Edit the color theme in `src/index.css` under the `@theme` section:
+Every string on the page lives in `src/content`. Components hold no prose. `src/content/limits.js` records the length each slot can hold, and `src/lib/copyFit.js` warns in development when a slot runs past it. The resume PDF lives in `public`.
 
-```css
-@theme {
-  --color-primary-500: #f59e0b;  /* Change primary color */
-  --color-accent-cyan: #00f5ff;   /* Change accent colors */
-  /* ... */
-}
-```
+## Motion
 
-### Personal Information
-Update the following files:
-- `src/components/Hero/Hero.jsx` - Name and introduction
-- `src/components/Navbar/Navbar.jsx` - Social links
-- `src/components/Contact/Contact.jsx` - Contact information
-- `src/data/skillsData.js` - Your skills and highlights
+Motion reports state and never decorates. Nothing translates more than 12 px, text never fades in on scroll, and every effect respects `prefers-reduced-motion`. The canvas stops drawing 12 seconds after the last interaction, so an idle page issues no frames.
 
-## 📱 Responsive Design
+## Notes
 
-The portfolio is fully responsive with breakpoints:
-- Mobile: < 640px
-- Tablet: 640px - 1024px
-- Desktop: > 1024px
-
-## 🌟 Featured Projects
-
-Currently showcasing:
-- **RAG Knowledge Base** - AI-powered document Q&A system using LangChain, ChromaDB, and Google Gemini
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Aditya-0156/portfolio/issues).
-
-## 👨‍💻 Author
-
-**Aditya**
-- GitHub: [@Aditya-0156](https://github.com/Aditya-0156)
-- Portfolio: [https://aditya-0156.github.io/portfolio/](https://aditya-0156.github.io/portfolio/)
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ using React, Three.js, and Tailwind CSS
-- Inspired by modern web design trends and glassmorphism aesthetics
-- Icons from Lucide and React Icons
-
----
-
-**⭐ If you like this portfolio template, please consider giving it a star!**
+This site was designed and built with AI assistance using Claude Code.

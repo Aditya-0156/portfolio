@@ -1,0 +1,69 @@
+/* motion.css: the visible motion layer. Smooth scroll (Lenis), masked text reveals, scroll
+   reveals driven by GSAP (elements carry data-reveal and start hidden only when JS runs),
+   the tool ticker, the log-print trace, the readout count, the theme-switch circle.
+   Every rule here is neutralised by the reduced-motion block at the end of base.css or by
+   the hooks that never create the effect. */
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@layer components {
+  /* Masked line reveal: <span class="mask"><span class="mask__inner">text</span></span>.
+     GSAP animates .mask__inner from y 110% to 0. Without JS nothing is hidden. */
+  .mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+  .mask--block { display: block; }
+  .mask__inner { display: inline-block; will-change: transform; }
+  .mask--block > .mask__inner { display: block; }
+  html.js [data-intro="pending"] .mask__inner { transform: translateY(110%); }
+
+  /* Scroll reveals: hidden by the hook (inline style) the moment it mounts, so there is never a
+     flash of hidden content when JS is off. */
+  [data-reveal] { will-change: transform, opacity; }
+
+  /* Tool ticker: an infinite, slow, mono marquee. Two copies of the track scroll by half. */
+  .ticker { position: relative; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+  .ticker__track { display: inline-flex; gap: 0; animation: ticker 42s linear infinite; }
+  .ticker:hover .ticker__track { animation-play-state: paused; }
+  .ticker__item { display: inline-flex; align-items: center; gap: var(--s-4); padding-right: var(--s-4); color: var(--fg-2); }
+  .ticker__dot { width: 3px; height: 3px; background: var(--fg-3); flex: none; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .ticker { mask-image: none; -webkit-mask-image: none; white-space: normal; } .ticker__track { animation: none; flex-wrap: wrap; } .ticker__track--dup { display: none; } }
+
+  /* Log print: rows appear in sequence when the panel is revealed; the caret blinks after the last row. */
+  html.js .trace__row { opacity: 0; transform: translateX(-4px); transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out); transition-delay: calc(var(--row, 0) * 45ms); }
+  html.js .trace.is-printed .trace__row { opacity: 1; transform: none; }
+  .caret { display: inline-block; width: 0.55em; height: 1em; background: var(--fg-2); vertical-align: -0.15em; margin-left: 0.3em; animation: caret 1s steps(1) infinite; }
+  @keyframes caret { 50% { opacity: 0; } }
+
+  /* Readout count: values are tabular so the width never jitters while counting. */
+  .readout__value { font-variant-numeric: tabular-nums; }
+
+  /* Buttons: sliding fill on hover (primary and bordered), in addition to the colour change. */
+  .btn { position: relative; overflow: hidden; isolation: isolate; }
+  .btn::after { content: ""; position: absolute; inset: 0; background: currentColor; opacity: 0.08; transform: translateX(-101%); transition: transform 320ms var(--ease-out); z-index: -1; }
+  .btn:hover::after { transform: translateX(0); }
+  .btn--text::after, .btn--demote::after { display: none; }
+
+  /* Underline draw for nav and text links. */
+  .u-draw { position: relative; }
+  .u-draw::after { content: ""; position: absolute; left: 0; right: 0; bottom: 6px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform 240ms var(--ease-out); }
+  .u-draw:hover::after, .u-draw[aria-current="true"]::after { transform: scaleX(1); transform-origin: left; }
+
+  /* Nav index digit roll */
+  .nav__index { display: none; }
+  @media (min-width: 900px) { .nav__index { display: inline-flex; } }
+  .roll { display: inline-block; overflow: hidden; height: 1.5em; vertical-align: bottom; }
+  .roll__inner { display: block; transition: transform 320ms var(--ease-inout); }
+  .roll__item { display: block; height: 1.5em; line-height: 1.5em; }
+
+  /* Fault marker pulse (one ring, three times, when the intro lands) */
+  .pulse { position: absolute; width: 4px; height: 4px; border-radius: 50%; pointer-events: none; }
+
+  /* Theme switch: a circle grows from the toggle. The old view sits beneath; the new one is clipped. */
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+  ::view-transition-old(root) { z-index: 1; }
+  ::view-transition-new(root) { z-index: 2; }
+}

@@ -1,0 +1,34 @@
+/* The Spectrum figure: caption row, canvas, axis row. Heights come from --spectrum-h. */
+@layer components {
+  .spectrum { position: relative; margin: 0; --spectrum-h: clamp(220px, 34vh, 340px); }
+  .spectrum--static { --spectrum-h: 140px; }
+  @media (max-width: 599px) {
+    .spectrum { --spectrum-h: 170px; }
+    .spectrum--static { --spectrum-h: 120px; }
+  }
+  .spectrum__rule { margin-bottom: 0; }
+  .spectrum__caption { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); min-height: 32px; color: var(--fg-2); }
+  .spectrum__cap { white-space: nowrap; }
+  .spectrum__cap--short { display: none; }
+  @media (max-width: 599px) { .spectrum__cap--long { display: none; } .spectrum__cap--short { display: inline; } }
+  .spectrum__hover { flex: 1; text-align: center; color: var(--fg-1); min-height: 1em; white-space: nowrap; }
+  .spectrum__fault { display: inline-flex; align-items: center; gap: 0.6em; white-space: nowrap; }
+  .spectrum .mark { display: inline-block; width: 4px; height: 4px; background: var(--accent); }
+  .spectrum .accent-word { color: var(--accent-text); }
+  .spectrum__wrap { position: relative; height: var(--spectrum-h); contain: strict; touch-action: pan-y; cursor: crosshair; }
+  .spectrum--static .spectrum__wrap { cursor: default; }
+  .spectrum__wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .spectrum__axis { position: relative; display: flex; align-items: center; justify-content: space-between; height: 28px; color: var(--fg-2); }
+  .spectrum__ticks { position: relative; flex: 1; height: 100%; }
+  .spectrum__tick { position: absolute; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; }
+  .spectrum__tick--first { transform: translate(0, -50%); }
+  .spectrum__tick--last { transform: translate(-100%, -50%); }
+  .spectrum__tick--band { color: var(--fg-1); }
+  .spectrum__tick--first { padding-left: 4px; }
+  .spectrum__tick--last { padding-right: 4px; }
+  .spectrum__ylabel { flex: none; margin-left: var(--s-5); white-space: nowrap; }
+  @media (max-width: 599px) { .spectrum__ylabel { display: none; } .spectrum__tick--minor { display: none; } }
+
+  /* Hero collapse: the caption and top rule fade as --collapse rises; the axis stays. */
+  .hero__spectrum .spectrum__caption, .hero__spectrum .spectrum__rule { opacity: calc(1 - var(--collapse, 0)); }
+}

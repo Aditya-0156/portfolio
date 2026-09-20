@@ -1,0 +1,48 @@
+/* Colour tokens. Dark is the default; the head script in index.html sets data-theme before first paint.
+   scripts/contrast.mjs parses this file: keep one six-digit hex per line inside the two selector blocks. */
+:root, :root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-0: #0B0C0E;   /* page */
+  --bg-1: #111214;   /* panel: nav menu, flagship panel */
+  --bg-2: #17191C;   /* raised: hover fill, table row hover */
+  --bg-3: #1E2024;   /* pressed */
+  --fg-0: #ECEDEE;   /* primary text, focus ring, primary button fill */
+  --fg-1: #A3A7AD;   /* secondary text */
+  --fg-2: #858A91;   /* tertiary: mono metadata, axis ticks, captions */
+  --fg-3: #4B5057;   /* never text: noise floor, disabled marks */
+  --hairline: #26292E;
+  --hairline-strong: #363A40;
+  --fill-hover: #D2D4D7;               /* primary button hover surface */
+  --accent: #FF5A36;                   /* marks and squares only */
+  --accent-text: #FF6E4E;              /* the accent word next to a mark, under 24 px */
+  --accent-dim: rgba(255, 90, 54, 0.16); /* wash behind the faulted channel only */
+  --focus: var(--fg-0);
+  --trace: #ECEDEE;
+  --trace-fill: rgba(236, 237, 238, 0.10);
+  --grid: #1B1D21;
+  --selection-bg: #ECEDEE;
+  --selection-fg: #0B0C0E;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-0: #F7F7F5;
+  --bg-1: #FFFFFF;
+  --bg-2: #EFEFEC;
+  --bg-3: #E6E6E2;
+  --fg-0: #141517;
+  --fg-1: #4B4F55;
+  --fg-2: #5F646C;
+  --fg-3: #A2A6AC;
+  --hairline: #DCDDD9;
+  --hairline-strong: #C2C4C0;
+  --fill-hover: #2B2D31;
+  --accent: #C9270B;
+  --accent-text: #B02209;
+  --accent-dim: rgba(201, 39, 11, 0.10);
+  --focus: var(--fg-0);
+  --trace: #141517;
+  --trace-fill: rgba(20, 21, 23, 0.07);
+  --grid: #E9E9E6;
+  --selection-bg: #141517;
+  --selection-fg: #F7F7F5;
+}

@@ -1,0 +1,15 @@
+/* Small component rules that base.css does not cover. */
+@layer components {
+  .entry__body { min-width: 0; }
+  @media (max-width: 599px) { .entry__loc { display: none; } }
+  .footer-wrap { margin-top: var(--s-6); }
+  .link .glyph { margin-left: 0.1em; }
+  .section:focus { outline: none; }
+  .visually-hidden-focusable:not(:focus):not(:focus-within) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@layer components {
+  .now__p + .now__p { margin-top: var(--s-4); }
+  .now__p { color: var(--fg-1); }
+  .now__stack { margin-top: var(--s-6); }
+  .edu__profiles { margin-top: var(--s-4); display: flex; gap: var(--s-5); }
+}

@@ -1,0 +1,7 @@
+@layer components {
+  .contact__statement { margin-top: var(--s-5); color: var(--fg-1); }
+  .contact__rule { margin: var(--s-6) 0 var(--s-3); }
+  .contact__links { display: flex; flex-wrap: wrap; gap: 0 var(--s-6); }
+  .contact__note { display: none; }
+  @media (max-width: 599px) { .contact__note { display: block; margin-top: var(--s-4); } }
+}

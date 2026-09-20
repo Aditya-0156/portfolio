@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css";
+@import "./motion.css";
+@import "./components.css";
+@theme inline {
+  --color-bg-0: var(--bg-0); --color-bg-1: var(--bg-1); --color-bg-2: var(--bg-2); --color-bg-3: var(--bg-3);
+  --color-fg-0: var(--fg-0); --color-fg-1: var(--fg-1); --color-fg-2: var(--fg-2);
+  --color-hairline: var(--hairline); --color-hairline-strong: var(--hairline-strong);
+  --color-accent: var(--accent); --color-accent-text: var(--accent-text);
+  --font-sans: var(--font-sans); --font-mono: var(--font-mono);
+}

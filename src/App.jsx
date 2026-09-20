@@ -1,61 +1,73 @@
-import { useEffect } from 'react';
-import Navbar from './components/Navbar/Navbar';
-import Hero from './components/Hero/Hero';
-import Projects from './components/Projects/Projects';
-import Skills from './components/Skills/Skills';
-import Contact from './components/Contact/Contact';
-import AnimatedBackground from './components/Background/AnimatedBackground';
+import { useMemo } from 'react';
+import SkipLink from './components/SkipLink.jsx';
+import Nav from './components/Nav.jsx';
+import Hero from './components/Hero.jsx';
+import Now from './components/Now.jsx';
+import Work from './components/Work.jsx';
+import Projects from './components/Projects/Projects.jsx';
+import Research from './components/Research/Research.jsx';
+import Stack from './components/Stack.jsx';
+import Education from './components/Education.jsx';
+import Contact from './components/Contact.jsx';
+import Footer from './components/Footer.jsx';
+import { ActiveSectionContext, useActiveSectionObserver } from './hooks/useActiveSection.js';
+import { useMotionPrefs } from './hooks/useMotionPrefs.js';
+import { useLenis } from './hooks/useLenis.js';
 
-function App() {
-  useEffect(() => {
-    // Smooth scroll polyfill for older browsers
-    document.documentElement.style.scrollBehavior = 'smooth';
+import site from './content/site.js';
+import hero from './content/hero.js';
+import now from './content/now.js';
+import work from './content/work.js';
+import projects from './content/projects.js';
+import research from './content/research.js';
+import stack from './content/stack.js';
+import education from './content/education.js';
+import contact from './content/contact.js';
+import spectrum from './content/spectrum.js';
 
-    return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
-    };
-  }, []);
+const SECTION_IDS = ['top', 'now', 'work', 'projects', 'research', 'stack', 'education', 'contact'];
+const INDEX_LABELS = {
+  top: '01 / INDEX',
+  now: '02 / NOW',
+  work: '03 / WORK',
+  projects: '04 / PROJECTS',
+  research: '05 / RESEARCH',
+  stack: '06 / STACK',
+  education: '07 / EDUCATION',
+  contact: '08 / CONTACT',
+};
+
+export default function App() {
+  const { reduced } = useMotionPrefs();
+  useLenis(!reduced);
+  const active = useActiveSectionObserver(SECTION_IDS);
+  const resumeHref = `${import.meta.env.BASE_URL}${contact.resume.file}`;
+
+  const extraLinks = useMemo(
+    () => [
+      { label: site.nav.github.label, href: site.nav.github.href, external: true },
+      { label: 'LinkedIn', href: contact.links[0].href, external: true },
+      { label: 'Email', href: `mailto:${contact.email}` },
+      { label: contact.resume.label, href: resumeHref, external: true },
+    ],
+    [resumeHref],
+  );
 
   return (
-    <div className="relative min-h-screen bg-dark-500 text-white">
-      {/* Animated 3D Background */}
-      <AnimatedBackground />
-
-      {/* Navigation */}
-      <Navbar />
-
-      {/* Main Content */}
-      <main className="relative z-10">
-        <Hero />
-
-        {/* About Section - Simple intro before projects */}
-        <section id="about" className="section-container py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              About <span className="gradient-text">Me</span>
-            </h2>
-            <p className="text-xl text-gray-400 leading-relaxed mb-6">
-              I'm a <span className="text-primary-400 font-semibold">Software Developer</span> at <span className="text-accent-cyan font-semibold">HCLTech</span>, where I build Azure OpenAI-powered automation tools that reduce development effort by 80%+.
-              Graduated with B.Tech in Computer Science from <span className="text-accent-purple font-semibold">IIIT-Delhi (2025)</span>.
-            </p>
-            <p className="text-lg text-gray-400 mb-4">
-              My research in ML-based optical network optimization earned me <span className="text-primary-400 font-bold">2 IEEE publications</span> and the
-              <span className="text-primary-400 font-bold"> 🏆 Best Paper Award at IEEE ANTS 2025</span>. I work with Python, Azure OpenAI, GPT-4, and build
-              intelligent automation solutions from research to production deployment.
-            </p>
-            <p className="text-base text-gray-500 italic">
-              Fun fact: I'm a Python expert who loves building automation tools and AI solutions... and when it comes to frontend,
-              I let AI do the heavy lifting! 😄 Because why not leverage the technology I work with?
-            </p>
-          </div>
-        </section>
-
-        <Projects />
-        <Skills />
-        <Contact />
+    <ActiveSectionContext.Provider value={active}>
+      <SkipLink targetId="content" label={site.nav.skipLabel} />
+      <Nav content={site} indexLabels={INDEX_LABELS} extraLinks={extraLinks} />
+      <main id="content">
+        <Hero content={hero} spectrum={spectrum} resumeHref={resumeHref} />
+        <Now content={now} />
+        <Work content={work} />
+        <Projects content={projects} />
+        <Research content={research} spectrum={spectrum} />
+        <Stack content={stack} />
+        <Education content={education} />
+        <Contact content={contact} resumeHref={resumeHref} />
       </main>
-    </div>
+      <Footer content={site} />
+    </ActiveSectionContext.Provider>
   );
 }
-
-export default App;

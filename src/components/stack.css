@@ -1,0 +1,8 @@
+@layer components {
+  .stack__groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+  @media (min-width: 600px) { .stack__groups { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); } }
+  .stack__rule { margin: var(--s-3) 0 var(--s-4); }
+  .stack__items > li + li { margin-top: var(--s-2); }
+  .stack__item { color: var(--fg-0); }
+  .stack__note { margin-top: var(--s-6); }
+}
