@@ -72,6 +72,7 @@ export default function Nav({ content, indexLabels, extraLinks }) {
           ))}
         </nav>
         <div className="nav__right">
+          <span id="motion-control" />
           <ThemeToggle labels={content.nav.themeLabels} />
           <a className="nav__github link t-small" href={content.nav.github.href} target="_blank" rel="noreferrer noopener">
             {content.nav.github.label}

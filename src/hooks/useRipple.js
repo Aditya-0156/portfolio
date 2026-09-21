@@ -112,8 +112,15 @@ export function useRipple(enabled, selector) {
         const { el } = frame;
         el.setAttribute('data-ripple', '');
         const style = el.style;
-        style.setProperty('--gravity-x', `${frame.x.toFixed(2)}px`);
-        style.setProperty('--gravity-y', `${frame.y.toFixed(2)}px`);
+        const reading = el.matches('.research__p, .pub');
+        style.setProperty(
+          '--gravity-x',
+          `${reading ? Math.round(frame.x * 0.4) : frame.x.toFixed(2)}px`,
+        );
+        style.setProperty(
+          '--gravity-y',
+          `${reading ? Math.round(frame.y * 0.4) : frame.y.toFixed(2)}px`,
+        );
         style.setProperty('--gravity-sx', frame.sx.toFixed(4));
         style.setProperty('--gravity-sy', frame.sy.toFixed(4));
         style.setProperty('--gravity-angle', `${frame.angle.toFixed(3)}deg`);

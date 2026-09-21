@@ -25,6 +25,7 @@ export default {
     themeLabels: { toLight: 'Light', toDark: 'Dark' },
   },
   footer: {
+    spaceNote: 'I wanted to build a 3D portfolio. A journey through space sounded like a fun design challenge. Subtle, I know.',
     colophon: 'This site was designed and built with AI assistance using Claude Code.',
     copyright: '2026 Aditya Yadav',
     topLabel: 'Top',

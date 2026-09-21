@@ -42,11 +42,10 @@ export default function Hero({ content, resumeHref }) {
         .to('.hero__name .mask__inner', { yPercent: 0, duration: 1.05, stagger: 0.08 }, 0.1)
         .to('.hero__role .mask__inner', { yPercent: 0, duration: 0.85 }, 0.34)
         .to('.hero__statement', { autoAlpha: 1, y: 0, duration: 0.75 }, 0.48)
-        .to('.hero__ctas > *', { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06 }, 0.6)
-        .to('.hero__cue', { autoAlpha: 1, duration: 0.5 }, 0.9);
+        .to('.hero__ctas > *', { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06 }, 0.6);
 
       gsap.set('.hero__statement, .hero__ctas > *', { autoAlpha: 0, y: 14 });
-      gsap.set('.hero__meta .intro, .hero__cue', { autoAlpha: 0 });
+      gsap.set('.hero__meta .intro', { autoAlpha: 0 });
 
       const start = () => {
         if (killed) return;
@@ -148,11 +147,7 @@ export default function Hero({ content, resumeHref }) {
           </div>
         </div>
 
-        <div className="hero__cue">
-          <Mono label dim>
-            {content.cue}
-          </Mono>
-        </div>
+
       </div>
     </section>
   );

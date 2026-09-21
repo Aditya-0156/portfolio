@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -6,17 +7,16 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { phenomenaShader } from '../../lib/voyage/phenomenaPass.js';
+import { readingShader } from '../../lib/voyage/readingPass.js';
 import { buildWorld } from '../../lib/voyage/world.js';
 import { clamp01, band } from '../../lib/space.js';
-import { scrollToHash } from '../../lib/motion.js';
 import { voyage } from '../../content/voyage.js';
 import { useNova } from '../../hooks/useNova.js';
 import { useRipple } from '../../hooks/useRipple.js';
 
 const FORGE =
-  '#work h2, #work h3, #work p, #work li, #work .t-mono, #work .t-mono-label, #projects h2, #projects h3, #projects p, #projects .t-mono';
-const MATTER =
-  '#work .entry, #projects .projects__intro, #projects .flagship, #projects .card';
+  '#work h3, #work .entry__date, #work .entry__stack, #projects h3, #projects .flagship__labels, #projects .card__labels';
+const MATTER = '#work .entry';
 const RIPPLE =
   '#research .readout, #research .research__title, #research .research__p, #research .pub, #stack .stack__group';
 const EJECTA = Array.from({ length: 28 }, (_, i) => ({
@@ -37,45 +37,18 @@ const CAMERA = [
 
 export default function Voyage({ reduced, isPhone }) {
   const canvasRef = useRef(null),
-    progressRef = useRef(null),
-    toggleRef = useRef(null),
     effectsRef = useRef(null);
-  const [cinema, setCinema] = useState(false);
   const [paused, setPaused] = useState(false);
   const [available, setAvailable] = useState(true);
-  const [chapter, setChapter] = useState(0);
-  const playback = useRef({ paused: false, cinema: false });
+  const playback = useRef({ paused: false });
   const engine = useRef({ wake: () => {} });
-  const nova = useNova(!reduced && !paused, FORGE, MATTER);
+  const nova = useNova(available && !reduced && !paused, FORGE, MATTER);
   const ripple = useRipple(!reduced && !paused, RIPPLE);
 
   useEffect(() => {
-    playback.current = { paused, cinema };
+    playback.current = { paused };
     engine.current.wake();
-  }, [paused, cinema]);
-  useEffect(() => {
-    document.documentElement.classList.toggle('voyage-cinema', cinema);
-    const regions = [
-      ...document.querySelectorAll('main, .nav, .footer-wrap, .skip'),
-    ];
-    regions.forEach((el) => {
-      el.inert = cinema;
-    });
-    const escape = (e) => {
-      if (e.key === 'Escape' && cinema) {
-        setCinema(false);
-        toggleRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', escape);
-    return () => {
-      document.documentElement.classList.remove('voyage-cinema');
-      regions.forEach((el) => {
-        el.inert = false;
-      });
-      window.removeEventListener('keydown', escape);
-    };
-  }, [cinema]);
+  }, [paused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -115,6 +88,8 @@ export default function Voyage({ reduced, isPhone }) {
     composer.addPass(bloom);
     const phenomena = new ShaderPass(phenomenaShader);
     composer.addPass(phenomena);
+    const reading = new ShaderPass(readingShader);
+    composer.addPass(reading);
     composer.addPass(new OutputPass());
     const effects = effectsRef.current;
     const ejecta = [...effects.querySelectorAll('.voyage-ejecta')];
@@ -125,9 +100,9 @@ export default function Voyage({ reduced, isPhone }) {
       t: 0,
       target: 0,
       anchors: [],
+      readingBoxes: [],
       width: 1,
       height: 1,
-      chapter: -1,
       dirty: true,
       lost: false,
       gateOpen: document.documentElement.classList.contains('light-gate-open'),
@@ -156,7 +131,21 @@ export default function Voyage({ reduced, isPhone }) {
       if (!state.raf && !document.hidden && !state.lost && !state.gateOpen)
         state.raf = requestAnimationFrame(draw);
     };
+    const readingElements = [
+      ...document.querySelectorAll(
+        '.section__content, .hero__role, .hero__statement',
+      ),
+    ];
     const measure = () => {
+      state.readingBoxes = readingElements.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return {
+          left: rect.left + scrollX,
+          top: rect.top + scrollY,
+          width: rect.width,
+          height: rect.height,
+        };
+      });
       const max = Math.max(
         1,
         document.documentElement.scrollHeight - innerHeight,
@@ -219,7 +208,7 @@ export default function Voyage({ reduced, isPhone }) {
       const still = reduced || playback.current.paused;
       const travel = still
         ? state.target
-        : state.t + (state.target - state.t) * (1 - Math.exp(-dt * 8));
+        : state.t + (state.target - state.t) * (1 - Math.exp(-dt * 14));
       state.t = travel;
       if (!still) state.time += dt;
       const time = state.time;
@@ -290,21 +279,28 @@ export default function Voyage({ reduced, isPhone }) {
           band(travel, 0.46, 0.51) * (1 - band(travel, 0.64, 0.69));
         world.blackHole.quaternion.copy(camera.quaternion);
         world.blackHole.rotateZ(-0.12);
-        const quasarEnergy =
-          band(travel, 0.645, 0.7) * (1 - band(travel, 0.8, 0.875));
-        const quasarPulse = quasarEnergy * (0.7 + 0.3 * Math.sin(time * 1.5));
-        world.quasar.visible = quasarEnergy > 0.001;
-        if (world.quasar.visible)
-          world.quasarSystem.update(time, camera, quasarEnergy);
+        const quasarVisible = travel > 0.645 && travel < 0.875;
+        const quasarState = world.quasarSystem.update(
+          time,
+          camera,
+          quasarVisible ? band(travel, 0.645, 0.82) : -1,
+          reduced,
+          1 - band(travel, 0.8, 0.875),
+        );
+        world.quasar.visible = quasarVisible;
         document.documentElement.style.setProperty(
           '--quasar-light',
-          still ? '0' : quasarPulse.toFixed(3),
+          still ? '0' : quasarState.light.toFixed(3),
         );
         world.galaxies.visible = travel > 0.755;
         world.galaxyMaterials.forEach((m) => {
           m.uniforms.uOpacity.value = band(travel, 0.755, 0.84) * 0.95;
         });
-        bloom.strength = 0.2 + novaEnergy * 0.12 + flash * 0.18;
+        bloom.strength =
+          0.2 +
+          novaEnergy * 0.12 +
+          flash * 0.18 +
+          (still ? 0 : quasarState.flash * 0.14);
         phenomena.enabled = false;
         effects.style.setProperty('--event-alpha', '0');
         effects.dataset.event = 'none';
@@ -369,12 +365,7 @@ export default function Voyage({ reduced, isPhone }) {
           particle.style.transform = `translate3d(${(sourceX + Math.cos(a) * radius).toFixed(1)}px,${(sourceY + Math.sin(a) * radius * 0.76).toFixed(1)}px,0) scale(${seed.depth})`;
           particle.style.opacity = String(novaEnergy * 0.68);
         });
-        if (
-          !still &&
-          !playback.current.cinema &&
-          eruption > 0 &&
-          eruption < 1
-        ) {
+        if (!still && eruption > 0 && eruption < 1) {
           nova.current.report({
             active: true,
             x: sourceX,
@@ -397,8 +388,7 @@ export default function Voyage({ reduced, isPhone }) {
           );
           phenomena.uniforms.uEnergy.value = wave;
           phenomena.uniforms.uPhase.value = phase;
-          if (!playback.current.cinema) {
-            ripple.current.report({
+          ripple.current.report({
               active: true,
               x,
               y,
@@ -408,18 +398,37 @@ export default function Voyage({ reduced, isPhone }) {
               progress: mergerProgress,
               energy: wave,
               time,
-            });
-          } else ripple.current.report({ active: false });
+          });
         } else ripple.current.report({ active: false });
         phenomena.uniforms.uAspect.value = camera.aspect;
-        composer.render();
-        if (progressRef.current)
-          progressRef.current.style.setProperty('--travel', travel);
-        const chapterIndex = Math.min(7, Math.floor(travel * 7 + 0.28));
-        if (state.chapter !== chapterIndex) {
-          state.chapter = chapterIndex;
-          setChapter(chapterIndex);
+        reading.enabled = true;
+        if (reading.enabled) {
+          const boxes = state.readingBoxes
+            .filter(
+              (box) =>
+                box.top + box.height > scrollY - 90 &&
+                box.top < scrollY + state.height + 90,
+            )
+            .slice(0, 3);
+          reading.uniforms.uFeather.value.set(
+            85 / state.width,
+            64 / state.height,
+          );
+          for (let i = 0; i < 3; i++) {
+            const box = boxes[i],
+              uniform = reading.uniforms[`uRect${i}`].value;
+            if (box)
+              uniform.set(
+                (box.left - scrollX - 96) / state.width,
+                1 - (box.top - scrollY + box.height + 80) / state.height,
+                (box.left - scrollX + box.width + 96) / state.width,
+                1 - (box.top - scrollY - 80) / state.height,
+              );
+            else uniform.set(-2, -2, -2, -2);
+          }
         }
+        composer.render();
+        canvas.dataset.ready = 'true';
         // Reduce resolution on sustained slow frames, including later, heavier chapters.
         // Never oscillate quality or create a second animation loop during a resize.
         if (!still && dt > 0) {
@@ -476,7 +485,6 @@ export default function Voyage({ reduced, isPhone }) {
       ejecta.forEach((particle) => {
         particle.style.opacity = '0';
       });
-      setCinema(false);
       setAvailable(false);
     };
     const contextRestored = () => {
@@ -513,7 +521,7 @@ export default function Voyage({ reduced, isPhone }) {
     };
   }, [reduced, isPhone, nova, ripple]);
 
-  const current = voyage.chapters[chapter];
+  const motionSlot = document.getElementById('motion-control');
   return (
     <>
       <canvas ref={canvasRef} className="voyage" aria-hidden="true" />
@@ -525,75 +533,19 @@ export default function Voyage({ reduced, isPhone }) {
           <i className="voyage-ejecta" key={i} />
         ))}
       </div>
-      {available ? (
-        <aside
-          className="voyage-hud"
-          aria-label="Voyager journey"
-          ref={progressRef}
+      {available && !reduced && motionSlot && createPortal(
+        <button
+          className="voyage-motion"
+          type="button"
+          aria-label={paused ? voyage.resume : voyage.pause}
+          aria-pressed={paused}
+          onClick={() => setPaused(p => !p)}
         >
-          <div className="voyage-hud__location">
-            <span className="voyage-hud__signal" />
-            <span className="voyage-hud__number">0{chapter + 1}</span>
-            <div>
-              <span className="voyage-hud__eyebrow">{voyage.title}</span>
-              <span className="voyage-hud__name">
-                {current.name}
-                <span> / {current.place}</span>
-              </span>
-            </div>
-          </div>
-          <nav className="voyage-hud__route" aria-label="Journey chapters">
-            {voyage.chapters.map((c, i) => (
-              <a
-                key={c.id}
-                href={`#${c.id}`}
-                title={c.name}
-                aria-label={`Chapter ${i + 1}: ${c.name}`}
-                aria-current={chapter === i ? 'step' : undefined}
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToHash(`#${c.id}`);
-                }}
-              >
-                <span />
-              </a>
-            ))}
-          </nav>
-          <div className="voyage-hud__actions">
-            {!reduced && (
-              <button
-                className="voyage-hud__pause"
-                aria-label={paused ? voyage.resume : voyage.pause}
-                aria-pressed={paused}
-                onClick={() => setPaused((p) => !p)}
-              >
-                <span aria-hidden="true">{paused ? '▷' : 'Ⅱ'}</span>
-              </button>
-            )}
-            <button
-              ref={toggleRef}
-              className="voyage-hud__toggle"
-              aria-pressed={cinema}
-              onClick={() => setCinema((c) => !c)}
-            >
-              <span aria-hidden="true">{cinema ? '↙' : '↗'}</span>
-              {cinema ? voyage.back : voyage.view}
-            </button>
-          </div>
-          {cinema && (
-            <div className="voyage-caption" key={chapter}>
-              <span>0{chapter + 1} / 08</span>
-              <h2>{current.name}</h2>
-              <p>{current.note}</p>
-              <small>{voyage.exitHint}</small>
-            </div>
-          )}
-        </aside>
-      ) : (
-        <p className="visually-hidden" role="status">
-          {voyage.fallback}
-        </p>
+          <span aria-hidden="true">{paused ? '▷' : 'Ⅱ'}</span>
+        </button>,
+        motionSlot,
       )}
+      {!available && <p className="visually-hidden" role="status">{voyage.fallback}</p>}
     </>
   );
 }

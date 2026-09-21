@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import Rule from './Rule.jsx';
 import { useActiveSection } from '../hooks/useActiveSection.js';
 import { useReveal } from '../hooks/useReveal.js';
-import { useSectionCamera } from '../hooks/useSectionCamera.js';
 
 /**
  * An open reading column beside the voyage. The navigation identifies each chapter;
@@ -20,7 +19,6 @@ export default function Section({
   const active = useActiveSection() === id;
   const titleId = `${id}-title`;
   useReveal(ref);
-  useSectionCamera(ref);
   return (
     <section
       id={id}

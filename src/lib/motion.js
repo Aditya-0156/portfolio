@@ -12,11 +12,17 @@ export const EASE_OUT = 'power3.out';
 export const EASE_INOUT = 'power2.inOut';
 
 export function prefersReducedMotion() {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    typeof matchMedia === 'function' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 }
 
 export function hasJs() {
-  return typeof document !== 'undefined' && document.documentElement.classList.contains('js');
+  return (
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('js')
+  );
 }
 
 let lenisInstance = null;
@@ -34,17 +40,37 @@ export function scrollToHash(href, { updateHash = true } = {}) {
   const el = id === 'top' ? document.body : document.getElementById(id);
   if (!el) return false;
   const lenis = getLenis();
-  const offset = -72;
-  if (lenis) {
-    lenis.scrollTo(id === 'top' ? 0 : el, { offset: id === 'top' ? 0 : offset, duration: 1.1, easing: (t) => 1 - Math.pow(1 - t, 3) });
-  } else if (id === 'top') {
-    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  const reduced = prefersReducedMotion();
+  const padding =
+    parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) ||
+    0;
+  const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+  const top =
+    id === 'top'
+      ? 0
+      : Math.max(
+          0,
+          el.getBoundingClientRect().top + window.scrollY - padding - margin,
+        );
+  if (lenis && !reduced) {
+    const distance = Math.abs(top - window.scrollY);
+    const duration = Math.min(0.85, Math.max(0.38, distance / 6000));
+    // A numeric target avoids applying CSS scroll-padding a second time in Lenis.
+    lenis.scrollTo(top, {
+      lerp: 0,
+      duration,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
+    });
   } else {
-    el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    window.scrollTo({ top, behavior: reduced ? 'instant' : 'smooth' });
   }
   if (updateHash) {
     try {
-      history.replaceState(null, '', id === 'top' ? location.pathname + location.search : href);
+      history.replaceState(
+        null,
+        '',
+        id === 'top' ? location.pathname + location.search : href,
+      );
     } catch {
       /* ignore */
     }

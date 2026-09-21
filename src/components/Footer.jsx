@@ -6,6 +6,7 @@ export default function Footer({ content }) {
     <footer className="footer-wrap">
       <Rule />
       <div className="wrap footer">
+        <p className="footer__space-note t-body">{content.footer.spaceNote}</p>
         <div className="footer__row">
           <div className="footer__group t-mono-label">
             <span>{content.name}</span>

@@ -1,5 +1,5 @@
 /* motion.css: the visible motion layer. Smooth scroll (Lenis), masked text reveals, scroll
-   reveals driven by GSAP (elements carry data-reveal and start hidden only when JS runs),
+   reveals driven by GSAP (data-reveal content remains readable while settling),
    the tool ticker, the log-print trace, the readout count, the theme-switch circle.
    Every rule here is neutralised by the reduced-motion block at the end of base.css or by
    the hooks that never create the effect. */
@@ -19,9 +19,8 @@ html.lenis, html.lenis body { height: auto; }
   .mask--block > .mask__inner { display: block; }
   html.js [data-intro="pending"] .mask__inner { transform: translateY(110%); }
 
-  /* Scroll reveals: hidden by the hook (inline style) the moment it mounts, so there is never a
-     flash of hidden content when JS is off. */
-  [data-reveal] { will-change: transform, opacity; }
+  /* Reading content settles without fading or scaling its glyphs. */
+  [data-reveal] { will-change: transform; }
 
   /* Tool ticker: an infinite, slow, mono marquee. Two copies of the track scroll by half. */
   .ticker { position: relative; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
@@ -33,7 +32,7 @@ html.lenis, html.lenis body { height: auto; }
   @media (prefers-reduced-motion: reduce) { .ticker { mask-image: none; -webkit-mask-image: none; white-space: normal; } .ticker__track { animation: none; flex-wrap: wrap; } .ticker__track--dup { display: none; } }
 
   /* Log print: rows appear in sequence when the panel is revealed; the caret blinks after the last row. */
-  html.js .trace__row { opacity: 0; transform: translateX(-4px); transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out); transition-delay: calc(var(--row, 0) * 45ms); }
+  html.js .trace__row { transform: translateX(-4px); transition: transform 180ms var(--ease-out); transition-delay: calc(var(--row, 0) * 15ms); }
   html.js .trace.is-printed .trace__row { opacity: 1; transform: none; }
   .caret { display: inline-block; width: 0.55em; height: 1em; background: var(--fg-2); vertical-align: -0.15em; margin-left: 0.3em; animation: caret 1s steps(1) infinite; }
   @keyframes caret { 50% { opacity: 0; } }

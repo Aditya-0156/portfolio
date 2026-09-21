@@ -1,15 +1,10 @@
 @layer components {
   /* ── The forge ───────────────────────────────────────────────────────────
      A star makes the heavy elements in the shell it throws off. As the blast front crosses the
-     page, the type it has already passed is painted from the inside out: white hot at the centre,
-     cooling through gold and ember, back to its own colour at the front. The gradient is clipped
-     to the glyphs, so the colour crosses a word mid-letter.
-     Every colour here clears AA on its own ground, so the text stays readable at every moment. */
+     page, headings take on its warm light. Opaque glyphs keep their contrast while the
+     material cools back to the reading color. */
   [data-forge] {
     --forge-base: var(--fg-0);
-    --forge-x: 50%;
-    --forge-y: 50%;
-    --forge-r: 0px;
   }
   [data-forge].prose,
   p[data-forge],
@@ -23,21 +18,6 @@
     --forge-base: var(--fg-2);
   }
 
-  [data-forge].is-forging {
-    background-image: radial-gradient(
-      circle at var(--forge-x) var(--forge-y),
-      var(--forge-0) 0px,
-      var(--forge-1) calc(var(--forge-r) * 0.26),
-      var(--forge-2) calc(var(--forge-r) * 0.56),
-      var(--forge-3) calc(var(--forge-r) * 0.84),
-      var(--forge-base) calc(var(--forge-r) * 1)
-    );
-    background-repeat: no-repeat;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
   /* The accent mark keeps its own colour rather than being swallowed by the front. */
   [data-forge].is-forging .mark,
   [data-forge].is-forging .trace__dot,
@@ -96,172 +76,10 @@
     z-index: 1;
     box-shadow: inset 0 0 140px 25px rgba(0, 0, 0, 0.22);
   }
-  .voyage-hud {
-    --travel: 0;
-    position: fixed;
-    bottom: 0;
-    inset-inline: 0;
-    z-index: 55;
-    min-height: 76px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 12px 40px;
-    background: linear-gradient(
-      0deg,
-      rgba(3, 6, 12, 0.97),
-      rgba(3, 6, 12, 0.8)
-    );
-    border-top: 1px solid rgba(187, 204, 228, 0.15);
-    color: #e8edf3;
-    font-family: var(--font-mono);
-  }
-  .voyage-hud::before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: 0;
-    height: 1px;
-    width: 100%;
-    transform: scaleX(var(--travel));
-    transform-origin: left;
-    background: #dcb787;
-  }
-  .voyage-hud__location {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .voyage-hud__signal {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #dfbe93;
-    box-shadow: 0 0 14px #caa06a;
-  }
-  .voyage-hud__number {
-    font-size: 24px;
-    font-weight: 300;
-    color: #dcb787;
-  }
-  .voyage-hud__eyebrow {
-    display: block;
-    font-size: 8px;
-    letter-spacing: 0.2em;
-    color: #9ba8b9;
-    margin-bottom: 6px;
-  }
-  .voyage-hud__name {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.03em;
-  }
-  .voyage-hud__name > span {
-    color: #9ba8b9;
-  }
-  .voyage-hud__route {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .voyage-hud__route a {
-    width: 30px;
-    min-height: 44px;
-    display: grid;
-    place-items: center;
-  }
-  .voyage-hud__route a span {
-    width: 20px;
-    height: 2px;
-    background: #4c5866;
-    transition:
-      background 0.3s,
-      transform 0.3s;
-  }
-  .voyage-hud__route a[aria-current] span {
-    background: #e5c397;
-    transform: scaleY(2);
-  }
-  .voyage-hud__route a:hover span {
-    background: #e8edf3;
-  }
-  .voyage-hud__actions {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .voyage-hud__pause {
-    min-width: 44px;
-    min-height: 44px;
-    text-align: center;
-    color: #b8c3d0;
-    font-size: 17px;
-  }
-  .voyage-hud__toggle {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 10px;
-    white-space: nowrap;
-    letter-spacing: 0.04em;
-  }
-  .voyage-hud__toggle > span {
-    color: #dcb787;
-    font-size: 20px;
-  }
-  .voyage-caption {
-    position: fixed;
-    bottom: 150px;
-    left: 7vw;
-    pointer-events: none;
-    animation: voyage-caption-in 0.7s ease both;
-  }
-  .voyage-caption > span {
-    font-size: 10px;
-    color: #e5c397;
-    letter-spacing: 0.22em;
-  }
-  .voyage-caption h2 {
-    font-family: var(--font-sans);
-    font-size: clamp(42px, 6vw, 90px);
-    font-weight: 400;
-    letter-spacing: -0.04em;
-    line-height: 1.2;
-    margin: 12px 0;
-  }
-  .voyage-caption p {
-    font-size: 12px;
-    color: #c4cfdd;
-    max-width: 38ch;
-  }
-  .voyage-caption small {
-    display: block;
-    color: #a5b3c4;
-    font-size: 9px;
-    letter-spacing: 0.08em;
-    margin-top: 28px;
-  }
-  .footer {
-    padding-bottom: 120px;
-  }
-  main,
-  .nav,
-  .footer-wrap {
-    transition:
-      opacity 0.7s ease,
-      visibility 0.7s;
-  }
-  .voyage-cinema main,
-  .voyage-cinema .nav,
-  .voyage-cinema .footer-wrap {
-    opacity: 0;
-    visibility: hidden;
-  }
-  .voyage-cinema .voyage-scrim {
-    opacity: 0.22;
-  }
+  .voyage-motion { width:32px; min-height:44px; display:grid; place-items:center; color:var(--fg-1); font-size:16px; }
+  .voyage-motion:hover { color:var(--fg-0); }
+  #motion-control:empty { display:none; }
+  .footer__space-note { max-width:54ch; margin-bottom:32px; color:#e0e6ee; text-shadow:0 1px 5px #03060c; }
   .nav {
     background: rgba(3, 6, 12, 0.8);
     backdrop-filter: blur(16px);
@@ -303,39 +121,7 @@
       margin-bottom: 65px;
     }
   }
-  @media (max-width: 1100px) {
-    .voyage-hud__name > span {
-      display: none;
-    }
-  }
   @media (max-width: 899px) {
-    .voyage-hud {
-      padding: 10px 20px;
-      min-height: 70px;
-      gap: 12px;
-    }
-    .voyage-hud__route {
-      display: none;
-    }
-    .voyage-hud__eyebrow {
-      font-size: 7px;
-      letter-spacing: 0.1em;
-    }
-    .voyage-hud__number {
-      font-size: 20px;
-    }
-    .voyage-hud__location {
-      gap: 10px;
-    }
-    .voyage-hud__signal {
-      display: none;
-    }
-    .voyage-hud__actions {
-      gap: 4px;
-    }
-    .voyage-hud__toggle {
-      font-size: 9px;
-    }
     .hero__inner {
       min-height: calc(100svh - var(--nav-h));
       padding-bottom: 105px;
@@ -346,29 +132,6 @@
     .hero__statement {
       max-width: 38ch;
     }
-    .voyage-caption {
-      left: 24px;
-      bottom: 130px;
-      right: 24px;
-    }
-  }
-  @media (max-width: 380px) {
-    .voyage-hud {
-      padding-inline: 12px;
-    }
-    .voyage-hud__eyebrow {
-      display: none;
-    }
-  }
-  @keyframes voyage-caption-in {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
   }
 }
 
@@ -378,9 +141,6 @@
   }
   .hero .hero__cue {
     margin-bottom: 0;
-  }
-  .voyage-cinema .voyage-caption {
-    text-shadow: 0 2px 24px #000;
   }
 }
 
@@ -418,8 +178,22 @@
 @layer components {
   /* Keep space visible through the reading column; protect the glyphs, not a panel. */
   .section__content {
-    --fg-1: #c7cbd2;
-    --fg-2: #aab4c3;
+    --fg-0: #f5f7fb;
+    --fg-1: #e0e6ee;
+    --fg-2: #d0d9e4;
+    --forge-0: #fff9ec;
+    --forge-1: #ffedce;
+    --forge-2: #ffdbaf;
+    --forge-3: #ffd4ad;
+  }
+  .section__grid {
+    padding-block: clamp(64px, 9svh, 108px);
+  }
+  .section__content .t-body {
+    line-height: 1.68;
+  }
+  .section__content .prose {
+    max-width: 60ch;
   }
   .section__content :is(p, h3, h4, li, .t-mono, .readout__value) {
     text-shadow:
@@ -428,7 +202,7 @@
   }
   #work .section__grid,
   #research .section__grid {
-    padding-top: clamp(180px, 38svh, 400px);
+    padding-top: clamp(96px, 19svh, 210px);
   }
   @media (min-width: 1100px) {
     #work .entry {

@@ -31,50 +31,41 @@ async function station(page, progress) {
   }, progress);
 }
 
-test('supernova launches content, heats glyphs, then settles when scrolling stops', async ({
-  page,
-}) => {
+test('each supernova entry makes one smooth entrance and stays settled on return', async ({ page }) => {
   await page.goto('./');
-  await expect(page.locator('.voyage-hud')).toBeVisible();
-  await station(page, 2 / 7);
-  await page.waitForTimeout(500);
-  await station(page, 0.315);
-  const samples = await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const values = [];
-        let start = 0;
-        function frame(t) {
-          start ||= t;
-          const nodes = [...document.querySelectorAll('#work .entry')];
-          values.push(
-            ...nodes.map((el) => ({
-              scale: parseFloat(getComputedStyle(el).scale),
-              heat: el.style.getPropertyValue('--nova-heat'),
-              blur: getComputedStyle(el).filter,
-            })),
-          );
-          if (t - start < 1500) requestAnimationFrame(frame);
-          else resolve(values);
-        }
-        requestAnimationFrame(frame);
-      }),
-  );
-  expect(samples.some((value) => value.scale < 0.995)).toBeTruthy();
-  expect(samples.some((value) => parseFloat(value.heat) > 0.02)).toBeTruthy();
-  await expect(page.locator('#work .is-forging').first()).toBeAttached();
-  await expect
-    .poll(() => page.locator('#work [data-nova-surface]').count())
-    .toBe(0);
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
+  const entries = page.locator('#work .entry');
+  await expect(entries).toHaveCount(3);
+  for (let i = 0; i < 3; i++) {
+    const samples = await entries.nth(i).evaluate(el => new Promise(resolve => {
+      scrollTo({top: el.getBoundingClientRect().top + scrollY - innerHeight * 0.6, behavior: 'instant'});
+      const values = [];
+      const start = performance.now();
+      function frame() {
+        values.push(Number(getComputedStyle(el).opacity));
+        if (performance.now() - start < 1500) requestAnimationFrame(frame);
+        else resolve(values);
+      }
+      frame();
+    }));
+    expect(samples[0]).toBe(0);
+    expect(samples.some(value => value > 0 && value < 1)).toBeTruthy();
+    expect(samples.at(-1)).toBe(1);
+    for (let j = 1; j < samples.length; j++) expect(samples[j]).toBeGreaterThanOrEqual(samples[j - 1] - 0.001);
+    await expect(entries.nth(i)).not.toHaveAttribute('data-nova-pending');
+  }
   await station(page, 0);
-  await expect(page.locator('[data-nova-surface],.is-forging')).toHaveCount(0);
+  await station(page, 0.315);
+  await page.waitForTimeout(300);
+  await expect(page.locator('#work [data-nova-surface], #work [data-nova-pending]')).toHaveCount(0);
+  for (const entry of await entries.all()) await expect(entry).toHaveCSS('opacity', '1');
 });
 
 test('gravity moves research blocks and pause restores their normal layout', async ({
   page,
 }) => {
   await page.goto('./');
-  await expect(page.locator('.voyage-hud')).toBeVisible();
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
   await station(page, 0.605);
   const text = page.locator('#research .research__p').first();
   await expect(text).toHaveAttribute('data-ripple', '');
@@ -133,7 +124,7 @@ test('mobile matter effects keep work readable and within the viewport', async (
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./');
-  await expect(page.locator('.voyage-hud')).toBeVisible();
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
   await station(page, 0.315);
   await expect(page.locator('#work .is-forging').first()).toBeAttached();
   await page.waitForTimeout(1700);
@@ -156,7 +147,7 @@ test('a lost graphics context clears active content and foreground effects', asy
   page,
 }) => {
   await page.goto('./');
-  await expect(page.locator('.voyage-hud')).toBeVisible();
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
   await station(page, 0.315);
   await expect(
     page.locator('#work [data-nova-surface]').first(),

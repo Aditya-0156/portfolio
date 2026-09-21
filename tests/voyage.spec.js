@@ -52,21 +52,14 @@ test('all eight chapters render without shader errors and preserve portfolio lin
     if (message.type() === 'error') errors.push(message.text());
   });
   await page.goto('./');
-  await expect(
-    page.getByRole('button', { name: 'View voyage', exact: true }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'View voyage', exact: true }).click();
-  await expect(page.locator('main')).toHaveAttribute('inert', '');
-  for (let i = 0; i < sections.length; i++) {
-    await jump(page, sections[i]);
-    await expect(page.locator('.voyage-hud__number')).toHaveText(`0${i + 1}`);
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
+  await expect(page.locator('.voyage-hud, .voyage-caption')).toHaveCount(0);
+  for (const id of sections) {
+    await jump(page, id);
     await page.waitForTimeout(200);
+    await expect(page.locator('main')).not.toHaveAttribute('inert');
   }
-  await page.keyboard.press('Escape');
-  await expect(page.locator('main')).not.toHaveAttribute('inert');
-  await expect(
-    page.getByRole('button', { name: 'View voyage', exact: true }),
-  ).toBeFocused();
+  await expect(page.locator('.footer__space-note')).toContainText('Subtle, I know.');
   await jump(page, 'top');
   const resume = page.locator('a[href$="Aditya_Yadav_Resume.pdf"]').first();
   expect(
@@ -89,7 +82,7 @@ test('pause stops GPU draws, scroll remains usable, and resume restarts renderin
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => window.__draws)).toBe(paused);
   await jump(page, 'research');
-  await expect(page.locator('.voyage-hud__number')).toHaveText('05');
+  await expect(page.locator('#research')).toBeInViewport();
   await expect
     .poll(() => page.evaluate(() => window.__draws))
     .toBeGreaterThan(paused);
@@ -108,7 +101,7 @@ test('reduced motion produces a still scene and no forge or ripple transforms', 
   await instrument(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
-  await expect(page.locator('.voyage-hud')).toBeVisible();
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
   await page.waitForTimeout(1200);
   const frames = await page.evaluate(() => window.__draws);
   expect(frames).toBeGreaterThan(0);
@@ -118,37 +111,21 @@ test('reduced motion produces a still scene and no forge or ripple transforms', 
     page.getByRole('button', { name: 'Pause motion', exact: true }),
   ).toHaveCount(0);
   await jump(page, 'work');
-  await expect(page.locator('.voyage-hud__number')).toHaveText('03');
+  await expect(page.locator('#work')).toBeInViewport();
   await expect(page.locator('[data-forge], [data-ripple]')).toHaveCount(0);
 });
 
-test('mobile has no horizontal overflow and can enter and exit the voyage', async ({
-  page,
-}) => {
+test('mobile keeps the portfolio accessible throughout the journey without overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./');
-  await page.getByRole('button', { name: 'View voyage', exact: true }).click();
-  await jump(page, 'research');
-  await expect(page.locator('.voyage-hud__number')).toHaveText('05');
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBeTruthy();
-  await page
-    .getByRole('button', { name: 'Back to portfolio', exact: true })
-    .click();
-  await expect(page.locator('main')).not.toHaveAttribute('inert');
-  await expect(
-    page.getByRole('heading', { name: 'Research', exact: true }),
-  ).toBeVisible();
-  await jump(page, 'contact');
-  await expect(page.locator('.voyage-hud__number')).toHaveText('08');
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBeTruthy();
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
+  for (const id of sections) {
+    await jump(page, id);
+    await page.waitForTimeout(150);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    await expect(page.locator('main')).not.toHaveAttribute('inert');
+  }
+  await expect(page.locator('.voyage-hud, .voyage-caption')).toHaveCount(0);
 });
 
 test('without WebGL the full portfolio remains accessible', async ({
@@ -169,7 +146,7 @@ test('without WebGL the full portfolio remains accessible', async ({
     page.getByRole('heading', { name: 'Aditya Yadav', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'View voyage', exact: true }),
+    page.getByRole('button', { name: 'Pause motion', exact: true }),
   ).toHaveCount(0);
   await page.getByRole('link', { name: 'See projects' }).click();
   await expect(
@@ -177,11 +154,11 @@ test('without WebGL the full portfolio remains accessible', async ({
   ).toBeVisible();
 });
 
-test('losing the GPU context exits cinema and leaves content readable', async ({
+test('losing the GPU context leaves the portfolio readable', async ({
   page,
 }) => {
   await page.goto('./');
-  await page.getByRole('button', { name: 'View voyage', exact: true }).click();
+  await expect(page.locator('.voyage[data-ready]')).toBeVisible();
   await page.evaluate(() => {
     document
       .querySelector('.voyage')

@@ -1,18 +1,19 @@
 @layer components {
   /* GSAP initializes these individual properties to inline `none`. Override only those
      resets; its animated transform still composes with the physical field. */
-  [data-nova-surface],
   [data-ripple] {
     translate: calc(var(--nova-dx, 0px) + var(--gravity-x, 0px))
       calc(var(--nova-dy, 0px) + var(--gravity-y, 0px)) !important;
     scale: calc(var(--nova-scale, 1) * var(--gravity-sx, 1))
       calc(var(--nova-scale, 1) * var(--gravity-sy, 1)) !important;
     rotate: var(--gravity-angle, 0deg) !important;
-    filter: blur(var(--nova-blur, 0px));
-    will-change: translate, scale, filter;
+    will-change: translate, scale;
+  }
+  [data-nova-pending] {
+    opacity: 0;
   }
   [data-nova-surface] {
-    transform-origin: var(--matter-origin-x, 50%) var(--matter-origin-y, 50%);
+    will-change: opacity, translate, scale;
     border-color: color-mix(
       in srgb,
       var(--hairline),
@@ -20,27 +21,17 @@
     );
   }
   [data-forge].is-forging {
-    --forge-warm: color-mix(
+    color: color-mix(
       in srgb,
       var(--forge-base),
-      var(--forge-2) calc(var(--forge-cooling, 0) * 24%)
-    );
-    background-image: radial-gradient(
-      circle at var(--forge-x) var(--forge-y),
-      var(--forge-warm)
-        max(0px, calc(var(--forge-r) - var(--forge-width) * 2.2)),
-      var(--forge-3) max(0px, calc(var(--forge-r) - var(--forge-width) * 1.35)),
-      var(--forge-2) max(0px, calc(var(--forge-r) - var(--forge-width) * 0.7)),
-      var(--forge-1) max(0px, calc(var(--forge-r) - var(--forge-width) * 0.35)),
-      var(--forge-0) var(--forge-r),
-      var(--forge-1) calc(var(--forge-r) + var(--forge-width) * 0.15),
-      var(--forge-base) calc(var(--forge-r) + var(--forge-width) * 0.8)
+      var(--forge-1)
+        calc(var(--forge-cooling, 0) * 18% + var(--forge-heat, 0) * 65%)
     );
     text-shadow:
-      0 1px 2px #03060c,
-      0 0 5px rgba(3, 6, 12, 0.9),
-      0 0 16px rgba(255, 167, 76, calc(var(--forge-heat, 0) * 0.42));
+      0 1px 3px #03060c,
+      0 0 14px rgba(255, 202, 137, calc(var(--forge-heat, 0) * 0.22));
   }
+
   [data-ripple] {
     transform-origin: 50% 50%;
     border-color: color-mix(
@@ -78,5 +69,16 @@
       #91cdff calc(var(--quasar-light, 0) * 65%)
     );
     box-shadow: 0 0 12px rgba(89, 175, 255, calc(var(--quasar-light, 0) * 0.25));
+  }
+}
+
+@layer components {
+  .research__p[data-ripple],
+  .pub[data-ripple] {
+    scale: 1 !important;
+    rotate: 0deg !important;
+    text-shadow:
+      0 1px 3px #03060c,
+      0 2px 14px rgba(0, 0, 0, 0.8);
   }
 }

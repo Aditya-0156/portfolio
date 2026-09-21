@@ -150,7 +150,7 @@
 }
 
 @layer components {
-  /* Include the HUD clearance in the viewport height instead of pushing the scroll cue below it. */
+  /* Keep the hero aligned with the portfolio reading column. */
   .hero .hero__inner {
     box-sizing: border-box;
     max-width: calc(1280px + 2 * var(--gutter));
