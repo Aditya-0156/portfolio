@@ -40,7 +40,7 @@ test('light requests escalate through questions and search in the same tab witho
   await expect(page).toHaveTitle('Search intercepted');
   expect(externalRequests).toHaveLength(1);
   expect(new URL(externalRequests[0]).searchParams.get('q')).toBe(
-    'why is space dark if the sun is so bright',
+    'is space bright?',
   );
   expect(page.context().pages()).toHaveLength(1);
 });

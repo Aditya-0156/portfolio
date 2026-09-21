@@ -24,7 +24,7 @@ export const lightGate = {
     },
   ],
   searchUrl:
-    'https://www.google.com/search?q=why+is+space+dark+if+the+sun+is+so+bright',
+    'https://www.google.com/search?q=is+space+bright%3F',
   searchDescription:
-    'Search Google for why space is dark if the Sun is so bright',
+    'Search Google for is space bright?',
 };

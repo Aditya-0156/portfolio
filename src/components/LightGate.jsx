@@ -115,9 +115,6 @@ export default function LightGate({ open, onClose, returnFocusTo }) {
           <Mono label dim>
             {s.label}
           </Mono>
-          <Mono label dim className="gate__count">
-            {step + 1} / {lightGate.steps.length}
-          </Mono>
         </div>
         <hr className="rule" aria-hidden="true" />
         <div aria-live="polite" aria-atomic="true">
