@@ -406,22 +406,24 @@ export function createSupernova(phone = false) {
     const blast = expansion(p);
     const flash = Math.exp(-Math.pow((p - 0.377) / 0.026, 2));
     const gas = ease(0.36, 0.435, p);
+    const surface = 1 - ease(0.36, 0.405, p);
     const tail = 1 - ease(0.88, 1, p) * 0.25;
     for (const material of materials) material.uniforms.uTime.value = time;
-    star.material.uniforms.uRadius.value =
-      p < 0.36
-        ? THREE.MathUtils.lerp(54 + Math.sin(time * 1.1) * 1.1, 14, collapse)
-        : 8 + Math.exp(-blast * 13) * 22;
+    // Heat builds inside a stable envelope. Shrinking the entire visible star before
+    // ignition reads as a camera retreat; instead its surface expands and dissolves
+    // into the ejecta from the same position and radius.
+    star.material.uniforms.uRadius.value = 54 + blast * 120;
     star.material.uniforms.uHeat.value = Math.max(collapse, gas);
-    star.material.uniforms.uOpacity.value = p < 0.36 ? 1 : 0.72;
+    star.material.uniforms.uOpacity.value = surface;
+    star.visible = surface > 0;
     corona.quaternion.copy(camera.quaternion);
     corona.scale.setScalar(
-      p < 0.36 ? 410 - collapse * 180 : 230 + flash * 1350,
+      410 + flash * 1350,
     );
     corona.material.uniforms.uHeat.value = collapse;
     corona.material.uniforms.uFlash.value = flash * 3;
     corona.material.uniforms.uOpacity.value =
-      p < 0.36 ? 0.75 : 0.35 + flash * 1.8;
+      0.75 - gas * 0.4 + flash * 1.8;
     shells.forEach((shell, i) => {
       shell.material.uniforms.uRadius.value =
         (30 + blast * 595) * (1 - i * 0.105);
